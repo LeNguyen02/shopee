@@ -1,6 +1,5 @@
 import React, { useState, useCallback } from 'react'
 import { useDropzone } from 'react-dropzone'
-import { getImageUrl } from 'src/utils/imageUtils'
 
 interface MultipleFileUploadProps {
   onFilesSelect: (files: File[]) => void
@@ -51,9 +50,25 @@ export default function MultipleFileUpload({
     onFilesRemove()
   }
 
-  const getPreviewUrl = (url: string | null | undefined): string | null => {
+  const getCompleteUrl = (url: string | null | undefined): string | null => {
     if (!url || typeof url !== 'string') return null
-    return getImageUrl(url)
+    
+    const trimmedUrl = url.trim()
+    if (trimmedUrl.length === 0) return null
+    
+    if (trimmedUrl.startsWith('http')) {
+      // Convert absolute URL to relative URL for proxy
+      try {
+        const urlObj = new URL(trimmedUrl)
+        return urlObj.pathname
+      } catch (error) {
+        return trimmedUrl
+      }
+    }
+    
+    if (trimmedUrl.startsWith('/uploads/')) return trimmedUrl
+    
+    return trimmedUrl
   }
 
   return (
@@ -68,7 +83,7 @@ export default function MultipleFileUpload({
             {validFiles.map((file, index) => (
               <div key={index} className="relative group">
                 <img
-                  src={getPreviewUrl(file) || ''}
+                  src={getCompleteUrl(file) || ''}
                   alt={`Preview ${index + 1}`}
                   className="w-full h-24 object-cover rounded-lg border border-gray-300"
                   onError={(e) => {

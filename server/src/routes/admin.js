@@ -4,6 +4,7 @@ const { uploadSingle, uploadMultiple } = require('../middleware/upload');
 const { uploadCategoryImage } = require('../middleware/uploadCategory');
 const User = require('../models/User');
 const Product = require('../models/Product');
+const FlashSale = require('../models/FlashSale');
 const { pool } = require('../config/database');
 const FlashSale = require('../models/FlashSale');
 
@@ -70,28 +71,19 @@ router.post('/login', async (req, res) => {
 // Admin dashboard - get stats
 router.get('/dashboard', requireAdmin, async (req, res) => {
   try {
-    // Aggregate counts from DB
-    const [userRows] = await pool.execute('SELECT COUNT(*) AS total, SUM(CASE WHEN roles = "Admin" THEN 1 ELSE 0 END) AS admins FROM users');
-    const [productRows] = await pool.execute('SELECT COUNT(*) AS total FROM products');
-    const [categoryRows] = await pool.execute('SELECT COUNT(*) AS total FROM categories');
-    const [orderRows] = await pool.execute('SELECT COUNT(*) AS total FROM orders');
-
-    const totalUsers = Number(userRows?.[0]?.total || 0);
-    const adminUsers = Number(userRows?.[0]?.admins || 0);
-    const totalProducts = Number(productRows?.[0]?.total || 0);
-    const totalCategories = Number(categoryRows?.[0]?.total || 0);
-    const totalOrders = Number(orderRows?.[0]?.total || 0);
-
+    const users = await User.getAll();
+    const totalUsers = users.length;
+    const adminUsers = users.filter(u => u.roles === 'Admin').length;
+    
     res.json({
       message: 'Thống kê admin',
       data: {
         stats: {
           totalUsers,
           adminUsers,
-          regularUsers: Math.max(totalUsers - adminUsers, 0),
-          totalProducts,
-          totalCategories,
-          totalOrders
+          regularUsers: totalUsers - adminUsers,
+          totalProducts: 0, // Will be updated when MySQL is connected
+          totalCategories: 0
         }
       }
     });
@@ -130,6 +122,7 @@ router.get('/users', requireAdmin, async (req, res) => {
   }
 });
 
+// Create user (admin only)
 router.post('/users', requireAdmin, async (req, res) => {
   try {
     const { name, email, password, roles } = req.body;
@@ -148,7 +141,6 @@ router.post('/users', requireAdmin, async (req, res) => {
     res.status(500).json({ message: 'Lỗi server', data: null });
   }
 });
-
 
 // Update user role (admin only)
 router.put('/users/:id/role', requireAdmin, async (req, res) => {
@@ -918,4 +910,5 @@ router.get('/flash-sales/:id', requireAdmin, async (req, res) => {
     res.status(500).json({ message: 'Lỗi server', data: null })
   }
 })
+
 module.exports = router;

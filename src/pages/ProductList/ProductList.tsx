@@ -1,4 +1,4 @@
-import { keepPreviousData, useQuery } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 import { Helmet } from 'react-helmet-async'
 import categoryApi from 'src/apis/category.api'
 import productApi from 'src/apis/product.api'
@@ -17,7 +17,7 @@ export default function ProductList() {
     queryFn: () => {
       return productApi.getProducts(queryConfig as ProductListConfig)
     },
-    placeholderData: keepPreviousData,
+    placeholderData: (prev) => prev,
     staleTime: 3 * 60 * 1000
   })
 
@@ -43,13 +43,13 @@ export default function ProductList() {
             <div className='col-span-12 md:col-span-9 order-1 md:order-2'>
               <SortProductList queryConfig={queryConfig} pageSize={(productsData as any).data.data.pagination.page_size} />
               <div className='mt-6 grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 items-stretch'>
-                {(productsData as any).data.data.products.map((product: any) => (
+                {productsData.data.data.products.map((product) => (
                   <div className='col-span-1' key={product._id}>
                     <Product product={product} />
                   </div>
                 ))}
               </div>
-              <Pagination queryConfig={queryConfig} pageSize={(productsData as any).data.data.pagination.page_size} pathname="/search" />
+              <Pagination queryConfig={queryConfig} pageSize={productsData.data.data.pagination.page_size} pathname="/search" />
             </div>
           </div>
         )}

@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { toast } from 'react-toastify'
 import config from 'src/constants/config'
-import { getImageUrl } from 'src/utils/imageUtils'
 
 interface FileUploadProps {
   onFileSelect: (file: File) => void
@@ -16,7 +15,14 @@ interface FileUploadProps {
 // Helper function to ensure URL is complete
 const getCompleteUrl = (url: string | null): string | null => {
   if (!url) return null;
-  return getImageUrl(url);
+  if (url.startsWith('http')) {
+    // Convert absolute URL to relative URL for proxy
+    const urlObj = new URL(url);
+    return urlObj.pathname;
+  }
+  if (url.startsWith('/uploads/')) return url;
+  console.log('getCompleteUrl: url does not start with http or /uploads/, returning as-is:', url);
+  return url;
 }
 
 export default function FileUpload({

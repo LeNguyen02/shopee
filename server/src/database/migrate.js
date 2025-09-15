@@ -71,13 +71,6 @@ async function createBaseTables() {
     )
   `)
 
-  // Ensure image column exists on categories
-  try {
-    await pool.execute('ALTER TABLE categories ADD COLUMN image VARCHAR(255) NULL')
-  } catch (e) {
-    // Ignore if column already exists
-  }
-
   // products
   await pool.execute(`
     CREATE TABLE IF NOT EXISTS products (
@@ -178,6 +171,10 @@ async function runMigrations() {
 
     await runStepOnce('inventory_constraints', async () => {
       await addInventoryConstraints()
+    })
+
+    await runStepOnce('flash_sales', async () => {
+      await migrateFlashSales()
     })
 
     await runStepOnce('seed_basics', async () => {

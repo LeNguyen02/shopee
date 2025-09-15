@@ -11,7 +11,6 @@ import { Category, CreateCategoryRequest, UpdateCategoryRequest } from 'src/type
 import Button from 'src/components/Button'
 import Input from 'src/components/Input'
 import FileUpload from 'src/components/FileUpload'
-import { getImageUrl } from 'src/utils/imageUtils'
 
 const createCategorySchema = yup.object({
   name: yup.string().required('Tên category không được để trống').min(2, 'Tên category phải có ít nhất 2 ký tự'),
@@ -25,6 +24,8 @@ const updateCategorySchema = yup.object({
 
 type CreateCategoryFormData = yup.InferType<typeof createCategorySchema>
 type UpdateCategoryFormData = yup.InferType<typeof updateCategorySchema>
+
+import { getImageUrl } from 'src/utils/imageUtils'
 
 export default function CategoryManagement() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)

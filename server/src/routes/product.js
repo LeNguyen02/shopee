@@ -124,6 +124,17 @@ router.get('/', async (req, res) => {
   }
 });
 
+// Public: get active flash sale with products
+router.get('/flash-sale/active', async (req, res) => {
+  try {
+    const sale = await FlashSale.getActiveNow();
+    res.json({ message: 'Lấy flash sale hiện tại', data: sale });
+  } catch (error) {
+    console.error('Get active flash sale error:', error);
+    res.status(500).json({ message: 'Lỗi server', data: null });
+  }
+});
+
 // Get product by ID
 router.get('/:id', async (req, res) => {
   try {

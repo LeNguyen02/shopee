@@ -9,19 +9,24 @@ import { Product } from 'src/types/product.type'
 export const getImageUrl = (imagePath: string): string => {
   if (!imagePath) return ''
   
-  // If it's already a full URL, return as-is
+  // If it's already a full URL, convert to relative path for proxy
   if (imagePath.startsWith('http')) {
-    return imagePath
+    try {
+      const url = new URL(imagePath)
+      // Prefer absolute to backend to work on Netlify without proxy
+      return `${config.backendUrl}${url.pathname}`
+    } catch {
+      return imagePath
+    }
   }
   
-  // Normalize relative input
-  const normalizedPath = imagePath.startsWith('/uploads/')
-    ? imagePath
-    : `/uploads/products/${imagePath}`
+  // If it's a relative path starting with /uploads/, prefix with backend URL
+  if (imagePath.startsWith('/uploads/')) {
+    return `${config.backendUrl}${imagePath}`
+  }
   
-  // Resolve against backendUrl so production uses Railway host
-  const base = (config.backendUrl || '').replace(/\/$/, '')
-  return `${base}${normalizedPath}`
+  // If it's just a filename, assume it's in uploads/products
+  return `${config.backendUrl}/uploads/products/${imagePath}`
 }
 
 /**
