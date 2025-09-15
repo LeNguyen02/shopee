@@ -22,7 +22,8 @@ import path from 'src/constants/path'
 import { purchasesStatus } from 'src/constants/purchase'
 import {
   Product as ProductType,
-  ProductListConfig
+  ProductListConfig,
+  FlashSale
 } from 'src/types/product.type'
 import {
   formatCurrency,
@@ -49,6 +50,14 @@ export default function ProductDetail() {
     queryKey: ['product', id],
     queryFn: () => productApi.getProductDetail(id as string)
   })
+  // Active flash sale for countdown
+  const { data: flashSaleRes } = useQuery({
+    queryKey: ['flash-sale-active'],
+    queryFn: () => productApi.getActiveFlashSale(),
+    staleTime: 30 * 1000
+  })
+  const flashSale: FlashSale | null = flashSaleRes?.data?.data || null
+  const [remaining, setRemaining] = useState<{ h: string; m: string; s: string }>({ h: '00', m: '00', s: '00' })
   const [currentIndexImages, setCurrentIndexImages] = useState([0, 5])
   const [activeImage, setActiveImage] = useState('')
   const product = productDetailData?.data.data
@@ -92,6 +101,28 @@ export default function ProductDetail() {
       }
     }
   }, [product])
+
+  // Countdown timer for product if included in active flash sale
+  useEffect(() => {
+    if (!flashSale) return
+    const item = flashSale.items.find(i => i.product_id === product?.id)
+    if (!item) return
+    const end = new Date(flashSale.end_time).getTime()
+    const interval = setInterval(() => {
+      const now = Date.now()
+      const diff = Math.max(0, end - now)
+      const h = Math.floor(diff / (1000 * 60 * 60))
+      const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
+      const s = Math.floor((diff % (1000 * 60)) / 1000)
+      setRemaining({
+        h: String(h).padStart(2, '0'),
+        m: String(m).padStart(2, '0'),
+        s: String(s).padStart(2, '0')
+      })
+      if (diff === 0) clearInterval(interval)
+    }, 1000)
+    return () => clearInterval(interval)
+  }, [flashSale, product?.id])
 
   const next = () => {
     const imagesArray = product?.images && product.images.length > 0 
@@ -179,9 +210,22 @@ export default function ProductDetail() {
         />
       </Helmet>
       <div className='container  mt-[20px]'>
-        <div className='bg-white p-4 shadow'>
-          <div className='grid grid-cols-12 gap-9'>
-            <div className='col-span-5'>
+        {flashSale && flashSale.items.some(i => i.product_id === product.id) && (
+          <div className='mb-4 bg-white rounded p-4 flex items-center gap-3'>
+            <img src="/assets/img/flash-sale/flash-sale-icon.png" alt="Flash Sale" className="w-[10rem] h-10" />
+            <div className='text-red-600 font-semibold text-2xl'>Flash Sale đang diễn ra</div>
+            <div className='ml-auto flex items-center gap-1 text-black font-mono text-2xl'>
+              <span className='bg-black text-white px-2 py-1 rounded'>{remaining.h}</span>
+              :
+              <span className='bg-black text-white px-2 py-1 rounded'>{remaining.m}</span>
+              :
+              <span className='bg-black text-white px-2 py-1 rounded'>{remaining.s}</span>
+            </div>
+          </div>
+        )}
+        <div className='bg-white p-3 md:p-4 shadow'>
+          <div className='grid grid-cols-12 gap-4 md:gap-9'>
+            <div className='col-span-12 md:col-span-5'>
               <div
                 className='relative w-full cursor-zoom-in overflow-hidden pt-[100%] shadow'
                 onMouseMove={handleZoom}
@@ -240,32 +284,32 @@ export default function ProductDetail() {
                 </button>
               </div>
             </div>
-            <div className='col-span-7 pl-20 pt-10'>
-              <h1 className='text-6xl font-bold uppercase'>{product.name}</h1>
-              <div className='mt-8 flex items-center'>
+            <div className='col-span-12 md:col-span-7 md:pl-20 md:pt-10 pt-4'>
+              <h1 className='text-2xl md:text-6xl font-bold uppercase leading-snug'>{product.name}</h1>
+              <div className='mt-3 md:mt-8 flex items-center flex-wrap gap-2'>
                 <div className='flex items-center'>
-                  <span className='mr-1 border-b border-b-orange text-orange text-3xl font-semibold'>{product.rating}</span>
+                  <span className='mr-1 border-b border-b-orange text-orange text-xl md:text-3xl font-semibold'>{product.rating}</span>
                   <ProductRating
                     rating={product.rating}
-                    activeClassname='fill-orange text-orange h-6 w-6'
-                    nonActiveClassname='fill-gray-300 text-gray-300 h-6 w-6'
+                    activeClassname='fill-orange text-orange h-4 w-4 md:h-6 md:w-6'
+                    nonActiveClassname='fill-gray-300 text-gray-300 h-4 w-4 md:h-6 md:w-6'
                   />
                 </div>
-                <div className='mx-4 h-6 w-[1px] bg-gray-300'></div>
+                <div className='mx-4 h-5 md:h-6 w-[1px] bg-gray-300'></div>
                 <div>
-                  <span className='text-3xl font-medium'>{formatNumberToSocialStyle(product.sold)}</span>
-                  <span className='ml-3 text-gray-500 text-2xl'>Đã bán</span>
+                  <span className='text-xl md:text-3xl font-medium'>{formatNumberToSocialStyle(product.sold)}</span>
+                  <span className='ml-3 text-gray-500 text-lg md:text-2xl'>Đã bán</span>
                 </div>
               </div>
-              <div className='mt-8 flex items-center bg-gray-50 px-6 py-6'>
-                <div className='text-gray-500 line-through text-3xl'>₫{formatCurrency(product.price_before_discount)}</div>
-                <div className='ml-3 text-5xl font-bold text-orange'>₫{formatCurrency(product.price)}</div>
-                <div className='ml-4 rounded-sm bg-orange px-2 py-1 text-xl font-semibold uppercase text-white'>
+              <div className='mt-4 md:mt-8 flex items-center flex-wrap gap-3 bg-gray-50 px-4 md:px-6 py-4 md:py-6'>
+                <div className='text-gray-500 line-through text-xl md:text-3xl'>₫{formatCurrency(product.price_before_discount)}</div>
+                <div className='md:ml-3 text-3xl md:text-5xl font-bold text-orange'>₫{formatCurrency(product.price)}</div>
+                <div className='md:ml-4 rounded-sm bg-orange px-2 py-1 text-sm md:text-xl font-semibold uppercase text-white'>
                   {rateSale(product.price_before_discount, product.price)} giảm
                 </div>
               </div>
-              <div className='mt-8 flex items-center'>
-                <div className='capitalize text-gray-500 text-xl font-medium'>Số lượng</div>
+              <div className='mt-4 md:mt-8 flex items-center flex-wrap gap-3'>
+                <div className='capitalize text-gray-500 text-base md:text-xl font-medium'>Số lượng</div>
                 <QuantityController
                   onDecrease={handleBuyCount}
                   onIncrease={handleBuyCount}
@@ -273,7 +317,7 @@ export default function ProductDetail() {
                   value={buyCount}
                   max={product.quantity}
                 />
-                <div className='ml-6 text-xl text-gray-500'>
+                <div className='md:ml-6 text-base md:text-xl text-gray-500'>
                   {product.quantity} {t('product:available')}
                 </div>
               </div>
@@ -290,11 +334,11 @@ export default function ProductDetail() {
                   <strong>Chỉ còn {product.quantity} sản phẩm</strong> - Đặt hàng ngay!
                 </div>
               )}
-              <div className='mt-20 flex items-center'>
+              <div className='mt-8 md:mt-20 flex items-center'>
                 <button
                   onClick={addToCart}
                   disabled={product.quantity === 0 || addToCartMutation.isPending}
-                  className={`flex h-20 items-center justify-center rounded-sm border px-6 capitalize shadow-sm text-2xl font-medium ${
+                  className={`flex h-12 md:h-20 items-center justify-center rounded-sm border px-4 md:px-6 capitalize shadow-sm text-base md:text-2xl font-medium ${
                     product.quantity === 0 
                       ? 'border-gray-300 bg-gray-100 text-gray-400 cursor-not-allowed'
                       : 'border-orange bg-orange/10 text-orange hover:bg-orange/5'
@@ -305,7 +349,7 @@ export default function ProductDetail() {
                     viewBox='0 0 15 15'
                     x={0}
                     y={0}
-                    className={`mr-[10px] h-6 w-6 fill-current ${
+                    className={`mr-[10px] h-5 w-5 md:h-6 md:w-6 fill-current ${
                       product.quantity === 0 ? 'stroke-gray-400 text-gray-400' : 'stroke-orange text-orange'
                     }`}
                   >
@@ -330,7 +374,7 @@ export default function ProductDetail() {
                 <button
                   onClick={buyNow}
                   disabled={product.quantity === 0 || addToCartMutation.isPending}
-                  className={`flex ml-4 h-20 w-80 items-center justify-center rounded-sm px-6 capitalize shadow-sm outline-none text-2xl font-medium ${
+                  className={`flex ml-3 md:ml-4 h-12 md:h-20 w-44 md:w-80 items-center justify-center rounded-sm px-4 md:px-6 capitalize shadow-sm outline-none text-base md:text-2xl font-medium ${
                     product.quantity === 0 
                       ? 'bg-gray-400 text-white cursor-not-allowed'
                       : 'bg-orange text-white hover:bg-orange/90'

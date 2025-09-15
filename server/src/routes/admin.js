@@ -4,6 +4,7 @@ const { uploadSingle, uploadMultiple } = require('../middleware/upload');
 const { uploadCategoryImage } = require('../middleware/uploadCategory');
 const User = require('../models/User');
 const Product = require('../models/Product');
+const FlashSale = require('../models/FlashSale');
 const { pool } = require('../config/database');
 
 const router = express.Router();
@@ -68,28 +69,19 @@ router.post('/login', async (req, res) => {
 // Admin dashboard - get stats
 router.get('/dashboard', requireAdmin, async (req, res) => {
   try {
-    // Aggregate counts from DB
-    const [userRows] = await pool.execute('SELECT COUNT(*) AS total, SUM(CASE WHEN roles = "Admin" THEN 1 ELSE 0 END) AS admins FROM users');
-    const [productRows] = await pool.execute('SELECT COUNT(*) AS total FROM products');
-    const [categoryRows] = await pool.execute('SELECT COUNT(*) AS total FROM categories');
-    const [orderRows] = await pool.execute('SELECT COUNT(*) AS total FROM orders');
-
-    const totalUsers = Number(userRows?.[0]?.total || 0);
-    const adminUsers = Number(userRows?.[0]?.admins || 0);
-    const totalProducts = Number(productRows?.[0]?.total || 0);
-    const totalCategories = Number(categoryRows?.[0]?.total || 0);
-    const totalOrders = Number(orderRows?.[0]?.total || 0);
-
+    const users = await User.getAll();
+    const totalUsers = users.length;
+    const adminUsers = users.filter(u => u.roles === 'Admin').length;
+    
     res.json({
       message: 'Thống kê admin',
       data: {
         stats: {
           totalUsers,
           adminUsers,
-          regularUsers: Math.max(totalUsers - adminUsers, 0),
-          totalProducts,
-          totalCategories,
-          totalOrders
+          regularUsers: totalUsers - adminUsers,
+          totalProducts: 0, // Will be updated when MySQL is connected
+          totalCategories: 0
         }
       }
     });
@@ -128,6 +120,26 @@ router.get('/users', requireAdmin, async (req, res) => {
   }
 });
 
+// Create user (admin only)
+router.post('/users', requireAdmin, async (req, res) => {
+  try {
+    const { name, email, password, roles } = req.body;
+    if (!email || !password) {
+      return res.status(400).json({ message: 'Thiếu email hoặc mật khẩu', data: null });
+    }
+    const existing = await User.findByEmail(email);
+    if (existing) {
+      return res.status(400).json({ message: 'Email đã tồn tại', data: null });
+    }
+    const id = await User.create({ email, password, name: name || '', roles: roles === 'Admin' ? 'Admin' : 'User' });
+    const created = await User.findById(id);
+    return res.json({ message: 'Tạo người dùng thành công', data: created });
+  } catch (error) {
+    console.error('Create user error:', error);
+    res.status(500).json({ message: 'Lỗi server', data: null });
+  }
+});
+
 // Update user role (admin only)
 router.put('/users/:id/role', requireAdmin, async (req, res) => {
   try {
@@ -161,6 +173,45 @@ router.put('/users/:id/role', requireAdmin, async (req, res) => {
       message: 'Lỗi server',
       data: null
     });
+  }
+});
+
+// Update user info (admin only)
+router.put('/users/:id', requireAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const allowed = ['name', 'phone', 'address', 'date_of_birth'];
+    const body = {};
+    allowed.forEach((k) => {
+      if (req.body[k] !== undefined) body[k] = req.body[k];
+    });
+
+    const user = await User.findById(parseInt(id));
+    if (!user) {
+      return res.status(404).json({ message: 'Không tìm thấy người dùng', data: null });
+    }
+
+    await User.update(parseInt(id), body);
+    return res.json({ message: 'Cập nhật người dùng thành công', data: null });
+  } catch (error) {
+    console.error('Update user error:', error);
+    res.status(500).json({ message: 'Lỗi server', data: null });
+  }
+});
+
+// Delete user (admin only)
+router.delete('/users/:id', requireAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const user = await User.findById(parseInt(id));
+    if (!user) {
+      return res.status(404).json({ message: 'Không tìm thấy người dùng', data: null });
+    }
+    await User.deleteById(parseInt(id));
+    return res.json({ message: 'Xóa người dùng thành công', data: null });
+  } catch (error) {
+    console.error('Delete user error:', error);
+    res.status(500).json({ message: 'Lỗi server', data: null });
   }
 });
 
@@ -778,5 +829,84 @@ router.put('/orders/:id/status', requireAdmin, async (req, res) => {
     connection.release();
   }
 });
+
+// Flash Sales (admin)
+router.post('/flash-sales', requireAdmin, async (req, res) => {
+  try {
+    const { name, start_time, end_time, is_active = 1 } = req.body;
+    if (!name || !start_time || !end_time) {
+      return res.status(400).json({ message: 'name, start_time, end_time are required', data: null });
+    }
+    const sale = await FlashSale.create({ name, start_time, end_time, is_active });
+    res.status(201).json({ message: 'Tạo flash sale thành công', data: sale });
+  } catch (error) {
+    console.error('Create flash sale error:', error);
+    res.status(500).json({ message: 'Lỗi server', data: null });
+  }
+});
+
+router.put('/flash-sales/:id', requireAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, start_time, end_time, is_active } = req.body;
+    const updates = {};
+    if (name !== undefined) updates.name = name;
+    if (start_time !== undefined) updates.start_time = start_time;
+    if (end_time !== undefined) updates.end_time = end_time;
+    if (is_active !== undefined) updates.is_active = is_active;
+    const sale = await FlashSale.update(parseInt(id), updates);
+    if (!sale) return res.status(404).json({ message: 'Flash sale không tồn tại', data: null });
+    res.json({ message: 'Cập nhật flash sale thành công', data: sale });
+  } catch (error) {
+    console.error('Update flash sale error:', error);
+    res.status(500).json({ message: 'Lỗi server', data: null });
+  }
+});
+
+router.post('/flash-sales/:id/items', requireAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { items } = req.body; // [{product_id, sale_price, item_limit?}]
+    if (!Array.isArray(items) || items.length === 0) {
+      return res.status(400).json({ message: 'items must be a non-empty array', data: null });
+    }
+    const sale = await FlashSale.addProducts(parseInt(id), items);
+    res.json({ message: 'Cập nhật sản phẩm flash sale thành công', data: sale });
+  } catch (error) {
+    console.error('Add flash sale items error:', error);
+    res.status(500).json({ message: 'Lỗi server', data: null });
+  }
+});
+
+// List flash sales
+router.get('/flash-sales', requireAdmin, async (req, res) => {
+  try {
+    const { page = 1, limit = 10, search = '', status = '' } = req.query
+    const list = await FlashSale.findAll({ page: Number(page), limit: Number(limit), search: String(search), status: String(status) })
+    const total = await FlashSale.getCount({ search: String(search), status: String(status) })
+    res.json({
+      message: 'Danh sách flash sale',
+      data: {
+        flash_sales: list,
+        pagination: { page: Number(page), limit: Number(limit), total, page_size: Math.ceil(total / Number(limit)) }
+      }
+    })
+  } catch (error) {
+    console.error('List flash sales error:', error)
+    res.status(500).json({ message: 'Lỗi server', data: null })
+  }
+})
+
+// Get flash sale detail with items
+router.get('/flash-sales/:id', requireAdmin, async (req, res) => {
+  try {
+    const sale = await FlashSale.findByIdWithItems(Number(req.params.id))
+    if (!sale) return res.status(404).json({ message: 'Flash sale không tồn tại', data: null })
+    res.json({ message: 'Chi tiết flash sale', data: sale })
+  } catch (error) {
+    console.error('Get flash sale error:', error)
+    res.status(500).json({ message: 'Lỗi server', data: null })
+  }
+})
 
 module.exports = router;

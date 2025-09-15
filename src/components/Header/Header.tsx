@@ -323,11 +323,11 @@ export default function Header() {
                 <div className="header__search-history">
                   <div className="header__search-history-heading">
                     <div className="header__search-history-text">
-                      Đăng ký và nhận voucher bạn mới lên đến 70k!
+                      Voucher lên đến 70k!
                     </div>
                     <img className="header__search-history-img" src="./assets/img/voucher.png" alt="voucher" />
                   </div>
-                  <ul className="header__search-history-list">
+                  {/* <ul className="header__search-history-list">
                     <li className="header__search-history-item">
                       <button 
                         type="button"
@@ -358,7 +358,7 @@ export default function Header() {
                         Laptop giá 0đ
                       </button>
                     </li>
-                  </ul>
+                  </ul> */}
                 </div>
                 {/* end: search history */}
               </div>
@@ -390,6 +390,13 @@ export default function Header() {
             </div>
           </div>
           {/* end: header search suggest */}
+
+          {/* Mobile-only avatar */}
+          {isAuthenticated && (
+            <Link to={path.profile} className="only-mobile" aria-label="Profile" style={{ marginRight: 8 }}>
+              <img src={getAvatarUrl(profile?.avatar)} alt="avatar" style={{ width: 28, height: 28, borderRadius: '50%' }} />
+            </Link>
+          )}
 
           {/* start: header cart */}
           <div className="header__cart">

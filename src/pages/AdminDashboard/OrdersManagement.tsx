@@ -254,10 +254,10 @@ export default function OrdersManagement() {
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div>
                           <div className="text-sm font-medium text-gray-900">
-                            {order.user?.name || 'N/A'}
+                            {order.user_name || 'N/A'}
                           </div>
                           <div className="text-sm text-gray-500">
-                            {order.user?.email || 'N/A'}
+                            {order.user_email || 'N/A'}
                           </div>
                         </div>
                       </td>

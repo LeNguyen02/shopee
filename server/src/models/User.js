@@ -3,16 +3,16 @@ const bcrypt = require('bcryptjs');
 
 class User {
   static async create(userData) {
-    const { email, password, name, phone, address, date_of_birth } = userData;
+    const { email, password, name, phone, address, date_of_birth, roles } = userData;
     
     // Hash password
     const saltRounds = 12;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
     
     const [result] = await pool.execute(
-      `INSERT INTO users (email, password, name, phone, address, date_of_birth) 
-       VALUES (?, ?, ?, ?, ?, ?)`,
-      [email, hashedPassword, name, phone || null, address || null, date_of_birth || null]
+      `INSERT INTO users (email, password, name, phone, address, date_of_birth, roles) 
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [email, hashedPassword, name, phone || null, address || null, date_of_birth || null, roles || 'User']
     );
     
     return result.insertId;
@@ -70,6 +70,35 @@ class User {
       [hashedPassword, id]
     );
     
+    return result.affectedRows > 0;
+  }
+
+  // Admin helpers
+  static async getAll() {
+    const [rows] = await pool.execute(
+      `SELECT id, email, name, phone, roles, verify, created_at, updated_at
+       FROM users
+       ORDER BY created_at DESC`
+    );
+    return rows;
+  }
+
+  static async update(id, data) {
+    return this.updateById(id, data);
+  }
+
+  static async updateRole(id, role) {
+    const [result] = await pool.execute(
+      'UPDATE users SET roles = ? WHERE id = ?',[role, id]
+    );
+    return result.affectedRows > 0;
+  }
+
+  static async deleteById(id) {
+    const [result] = await pool.execute(
+      'DELETE FROM users WHERE id = ?',
+      [id]
+    );
     return result.affectedRows > 0;
   }
 }

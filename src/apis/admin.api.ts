@@ -2,20 +2,32 @@ import { Product, ProductList, CreateProductRequest, UpdateProductRequest } from
 import { Order, OrderList, UpdateOrderStatusRequest } from 'src/types/order.type'
 import { SuccessResponse } from 'src/types/utils.type'
 import httpAdmin from 'src/utils/httpAdmin'
+import { FlashSale } from 'src/types/product.type'
 
 const URL = 'admin'
 
 const adminApi = {
-  // Dashboard
-  getDashboard() {
-    return httpAdmin.get<SuccessResponse<{ stats: {
-      totalUsers: number
-      adminUsers: number
-      regularUsers: number
-      totalProducts: number
-      totalCategories: number
-      totalOrders: number
-    } }>>(`${URL}/dashboard`)
+  // Users
+  getUsers() {
+    return httpAdmin.get<SuccessResponse<Array<{ id: number; email: string; name: string; phone: string | null; roles: 'User' | 'Admin'; verify: number; created_at: string; updated_at: string }>>>(
+      `${URL}/users`
+    )
+  },
+
+  updateUserRole(id: number, roles: 'User' | 'Admin') {
+    return httpAdmin.put<SuccessResponse<null>>(`${URL}/users/${id}/role`, { roles })
+  },
+
+  updateUser(id: number, body: Partial<{ name: string; phone: string; address: string; date_of_birth: string }>) {
+    return httpAdmin.put<SuccessResponse<null>>(`${URL}/users/${id}`, body)
+  },
+
+  deleteUser(id: number) {
+    return httpAdmin.delete<SuccessResponse<null>>(`${URL}/users/${id}`)
+  },
+
+  createUser(body: { name: string; email: string; password: string; roles: 'User' | 'Admin' }) {
+    return httpAdmin.post<SuccessResponse<{ id: number }>>(`${URL}/users`, body)
   },
 
   // Products
@@ -114,6 +126,30 @@ const adminApi = {
         'Content-Type': 'multipart/form-data'
       }
     })
+  },
+
+  // Flash Sales
+  createFlashSale(body: { name: string; start_time: string; end_time: string; is_active?: 0 | 1 }) {
+    return httpAdmin.post<SuccessResponse<FlashSale>>(`${URL}/flash-sales`, body)
+  },
+
+  updateFlashSale(id: number, body: Partial<{ name: string; start_time: string; end_time: string; is_active: 0 | 1 }>) {
+    return httpAdmin.put<SuccessResponse<FlashSale>>(`${URL}/flash-sales/${id}`, body)
+  },
+
+  addFlashSaleItems(id: number, items: Array<{ product_id: number; sale_price: number; item_limit?: number | null }>) {
+    return httpAdmin.post<SuccessResponse<FlashSale>>(`${URL}/flash-sales/${id}/items`, { items })
+  },
+
+  getFlashSales(params: { page?: number; limit?: number; search?: string; status?: string }) {
+    return httpAdmin.get<SuccessResponse<{ flash_sales: FlashSale[]; pagination: { page: number; limit: number; total: number; page_size: number } }>>(
+      `${URL}/flash-sales`,
+      { params }
+    )
+  },
+
+  getFlashSaleDetail(id: number) {
+    return httpAdmin.get<SuccessResponse<FlashSale>>(`${URL}/flash-sales/${id}`)
   }
 }
 

@@ -19,14 +19,5 @@
     "baseUrl": "."
   },
   "include": ["src"],
-  "exclude": [
-    "src/**/*.test.ts",
-    "src/**/*.test.tsx",
-    "src/**/*.spec.ts",
-    "src/**/*.spec.tsx",
-    "src/**/*.snap",
-    "src/msw/**",
-    "src/stories/**"
-  ],
   "references": [{ "path": "./tsconfig.node.json" }]
 }
