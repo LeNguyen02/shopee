@@ -23,6 +23,26 @@ export interface Product {
   updatedAt?: string // For backward compatibility
 }
 
+export interface FlashSaleItem {
+  id: number
+  flash_sale_id: number
+  product_id: number
+  sale_price: number
+  item_limit?: number | null
+  product_name?: string
+  product_image?: string
+  product_sold?: number
+}
+
+export interface FlashSale {
+  id: number
+  name: string
+  start_time: string
+  end_time: string
+  is_active: 0 | 1
+  items: FlashSaleItem[]
+}
+
 export interface ProductList {
   products: Product[]
   pagination: {

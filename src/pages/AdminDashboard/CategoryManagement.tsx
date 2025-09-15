@@ -11,7 +11,6 @@ import { Category, CreateCategoryRequest, UpdateCategoryRequest } from 'src/type
 import Button from 'src/components/Button'
 import Input from 'src/components/Input'
 import FileUpload from 'src/components/FileUpload'
-import { getImageUrl } from 'src/utils/imageUtils'
 
 const createCategorySchema = yup.object({
   name: yup.string().required('Tên category không được để trống').min(2, 'Tên category phải có ít nhất 2 ký tự'),
@@ -244,7 +243,7 @@ export default function CategoryManagement() {
                   <td className="px-6 py-4 whitespace-nowrap">
                     {category.image ? (
                       <img
-                        src={getImageUrl(category.image)}
+                        src={category.image}
                         alt={category.name}
                         className="h-12 w-12 object-cover rounded-lg"
                         onError={(e) => {

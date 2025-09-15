@@ -1,0 +1,381 @@
+import { useEffect, useMemo, useState } from 'react'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import adminApi from 'src/apis/admin.api'
+import { FlashSale, Product } from 'src/types/product.type'
+import Button from 'src/components/Button'
+import { toast } from 'react-toastify'
+
+export default function FlashSaleManagement() {
+  const [search, setSearch] = useState('')
+  const [status, setStatus] = useState('')
+  const [page, setPage] = useState(1)
+  const [limit] = useState(10)
+  const [isCreateOpen, setIsCreateOpen] = useState(false)
+  const [isEditOpen, setIsEditOpen] = useState(false)
+  const [isItemsOpen, setIsItemsOpen] = useState(false)
+  const [editing, setEditing] = useState<FlashSale | null>(null)
+  const [currentSaleId, setCurrentSaleId] = useState<number | null>(null)
+
+  const queryClient = useQueryClient()
+
+  const { data, isLoading } = useQuery({
+    queryKey: ['admin-flash-sales', page, search, status],
+    queryFn: () => adminApi.getFlashSales({ page, limit, search, status })
+  })
+
+  const list: FlashSale[] = data?.data.data.flash_sales || []
+  const pagination = data?.data.data.pagination
+
+  // Create form state
+  const [createForm, setCreateForm] = useState({ name: '', start_time: '', end_time: '', is_active: 1 as 0 | 1 })
+  const createMutation = useMutation({
+    mutationFn: () => adminApi.createFlashSale(createForm),
+    onSuccess: (res) => {
+      toast.success('Tạo flash sale thành công')
+      setIsCreateOpen(false)
+      setCreateForm({ name: '', start_time: '', end_time: '', is_active: 1 })
+      queryClient.invalidateQueries({ queryKey: ['admin-flash-sales'] })
+    },
+    onError: (e: any) => toast.error(e?.response?.data?.message || 'Lỗi tạo flash sale')
+  })
+
+  // Update form state
+  const [editForm, setEditForm] = useState({ name: '', start_time: '', end_time: '', is_active: 1 as 0 | 1 })
+  const updateMutation = useMutation({
+    mutationFn: () => adminApi.updateFlashSale(editing!.id, editForm),
+    onSuccess: () => {
+      toast.success('Cập nhật flash sale thành công')
+      setIsEditOpen(false)
+      setEditing(null)
+      queryClient.invalidateQueries({ queryKey: ['admin-flash-sales'] })
+    },
+    onError: (e: any) => toast.error(e?.response?.data?.message || 'Lỗi cập nhật flash sale')
+  })
+
+  // Items management state
+  const [items, setItems] = useState<Array<{ product_id: number; sale_price: number; item_limit?: number | null; discount_percent?: number; product_price?: number }>>([])
+
+  // Product search for dropdown
+  const [productSearch, setProductSearch] = useState('')
+  const { data: productsData } = useQuery({
+    queryKey: ['admin-products-for-flash', productSearch],
+    queryFn: () => adminApi.getProducts({ page: 1, limit: 50, search: productSearch, category: '' })
+  })
+  const productOptions: Product[] = productsData?.data.data.products || []
+  const addItemsMutation = useMutation({
+    mutationFn: () => {
+      const payload = items
+        .map(i => {
+          const basePrice = i.product_price
+          let salePrice = i.sale_price
+          if ((i.discount_percent !== undefined && i.discount_percent !== null) && basePrice && basePrice > 0) {
+            const pct = Math.min(100, Math.max(0, Number(i.discount_percent)))
+            salePrice = Math.max(0, Math.round((basePrice * (100 - pct)) / 100))
+          }
+          return { product_id: i.product_id, sale_price: salePrice, item_limit: i.item_limit ?? null }
+        })
+        .filter(i => i.product_id && i.sale_price && i.sale_price > 0)
+      return adminApi.addFlashSaleItems(currentSaleId!, payload)
+    },
+    onSuccess: () => {
+      toast.success('Cập nhật sản phẩm flash sale thành công')
+      setIsItemsOpen(false)
+      setItems([])
+    },
+    onError: (e: any) => toast.error(e?.response?.data?.message || 'Lỗi cập nhật sản phẩm')
+  })
+
+  const formatDate = (iso: string) => new Date(iso).toLocaleString()
+
+  const handleOpenEdit = (sale: FlashSale) => {
+    setEditing(sale)
+    setEditForm({ name: sale.name, start_time: sale.start_time.slice(0, 16), end_time: sale.end_time.slice(0, 16), is_active: sale.is_active })
+    setIsEditOpen(true)
+  }
+
+  const handleOpenItems = (sale: FlashSale) => {
+    setCurrentSaleId(sale.id)
+    setItems((sale.items || []).map(i => ({ product_id: i.product_id, sale_price: Number(i.sale_price), item_limit: i.item_limit ?? null })))
+    setIsItemsOpen(true)
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold text-gray-900">Quản lý Flash Sale</h2>
+        <Button onClick={() => setIsCreateOpen(true)} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md font-medium">
+          <i className="fas fa-plus mr-2"></i>
+          Tạo Flash Sale
+        </Button>
+      </div>
+
+      {/* Filters */}
+      <div className="bg-white p-4 rounded-lg shadow">
+        <form onSubmit={(e) => { e.preventDefault(); setPage(1) }} className="flex gap-4 items-end">
+          <div className="flex-1">
+            <label className="block text-sm font-medium text-gray-700 mb-1">Tìm kiếm</label>
+            <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Nhập tên flash sale..." className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          </div>
+          <div className="w-48">
+            <label className="block text-sm font-medium text-gray-700 mb-1">Trạng thái</label>
+            <select value={status} onChange={(e) => setStatus(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <option value="">Tất cả</option>
+              <option value="active">Đang diễn ra</option>
+              <option value="upcoming">Sắp diễn ra</option>
+              <option value="ended">Đã kết thúc</option>
+            </select>
+          </div>
+          <Button type="submit" className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md">
+            <i className="fas fa-search mr-2"></i>
+            Tìm kiếm
+          </Button>
+        </form>
+      </div>
+
+      {/* Table */}
+      <div className="bg-white shadow rounded-lg overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tên</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Bắt đầu</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kết thúc</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trạng thái</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sản phẩm</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Thao tác</th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {list.map(sale => {
+                const now = Date.now()
+                const st = new Date(sale.start_time).getTime()
+                const en = new Date(sale.end_time).getTime()
+                const state = now < st ? 'Sắp diễn ra' : now > en ? 'Đã kết thúc' : 'Đang diễn ra'
+                return (
+                  <tr key={sale.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{sale.name}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatDate(sale.start_time)}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatDate(sale.end_time)}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm">
+                      <span className={`px-2 py-1 rounded text-xs ${state === 'Đang diễn ra' ? 'bg-green-100 text-green-700' : state === 'Sắp diễn ra' ? 'bg-blue-100 text-blue-700' : 'bg-gray-200 text-gray-700'}`}>{state}</span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{sale.items?.length ?? 0}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                      <button onClick={() => handleOpenEdit(sale)} className="text-indigo-600 hover:text-indigo-900" title="Chỉnh sửa">
+                        <i className="fas fa-edit"></i>
+                      </button>
+                      <button onClick={() => handleOpenItems(sale)} className="text-amber-600 hover:text-amber-800" title="Thêm sản phẩm">
+                        <i className="fas fa-plus-square"></i>
+                      </button>
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Pagination */}
+        {pagination && pagination.page_size > 1 && (
+          <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
+            <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between w-full">
+              <div>
+                <p className="text-sm text-gray-700">
+                  Hiển thị <span className="font-medium">{(page - 1) * pagination.limit + 1}</span> đến <span className="font-medium">{Math.min(page * pagination.limit, pagination.total)}</span> của <span className="font-medium">{pagination.total}</span> kết quả
+                </p>
+              </div>
+              <div>
+                <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
+                  <button onClick={() => setPage(Math.max(1, page - 1))} disabled={page === 1} className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                    <i className="fas fa-chevron-left"></i>
+                  </button>
+                  {Array.from({ length: pagination.page_size }, (_, i) => i + 1).map((p) => (
+                    <button key={p} onClick={() => setPage(p)} className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${p === page ? 'z-10 bg-blue-50 border-blue-500 text-blue-600' : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'}`}>
+                      {p}
+                    </button>
+                  ))}
+                  <button onClick={() => setPage(Math.min(pagination.page_size, page + 1))} disabled={page === pagination.page_size} className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                    <i className="fas fa-chevron-right"></i>
+                  </button>
+                </nav>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Create Modal */}
+      {isCreateOpen && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-10 mx-auto p-6 border w-full max-w-xl shadow-lg rounded-md bg-white">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-semibold text-gray-900">Tạo Flash Sale</h3>
+              <button onClick={() => setIsCreateOpen(false)} className="text-gray-400 hover:text-gray-600 transition-colors">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Tên chương trình</label>
+                <input value={createForm.name} onChange={e => setCreateForm({ ...createForm, name: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded" />
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Bắt đầu</label>
+                  <input type="datetime-local" value={createForm.start_time} onChange={e => setCreateForm({ ...createForm, start_time: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Kết thúc</label>
+                  <input type="datetime-local" value={createForm.end_time} onChange={e => setCreateForm({ ...createForm, end_time: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded" />
+                </div>
+              </div>
+              <div>
+                <label className="inline-flex items-center gap-2 text-sm text-gray-700">
+                  <input type="checkbox" checked={createForm.is_active === 1} onChange={e => setCreateForm({ ...createForm, is_active: e.target.checked ? 1 : 0 })} />
+                  Kích hoạt ngay
+                </label>
+              </div>
+              <div className="flex justify-end gap-3 pt-2">
+                <button onClick={() => setIsCreateOpen(false)} className="px-4 py-2 text-sm text-gray-700 bg-gray-100 rounded">Hủy</button>
+                <button onClick={() => createMutation.mutate()} disabled={createMutation.isPending} className="px-4 py-2 text-sm text-white bg-blue-600 rounded disabled:opacity-50">{createMutation.isPending ? 'Đang tạo...' : 'Tạo'}</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Modal */}
+      {isEditOpen && editing && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-10 mx-auto p-6 border w-full max-w-xl shadow-lg rounded-md bg-white">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-semibold text-gray-900">Chỉnh sửa Flash Sale</h3>
+              <button onClick={() => setIsEditOpen(false)} className="text-gray-400 hover:text-gray-600 transition-colors">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Tên chương trình</label>
+                <input value={editForm.name} onChange={e => setEditForm({ ...editForm, name: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded" />
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Bắt đầu</label>
+                  <input type="datetime-local" value={editForm.start_time} onChange={e => setEditForm({ ...editForm, start_time: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Kết thúc</label>
+                  <input type="datetime-local" value={editForm.end_time} onChange={e => setEditForm({ ...editForm, end_time: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded" />
+                </div>
+              </div>
+              <div>
+                <label className="inline-flex items-center gap-2 text-sm text-gray-700">
+                  <input type="checkbox" checked={editForm.is_active === 1} onChange={e => setEditForm({ ...editForm, is_active: e.target.checked ? 1 : 0 })} />
+                  Đang kích hoạt
+                </label>
+              </div>
+              <div className="flex justify-end gap-3 pt-2">
+                <button onClick={() => setIsEditOpen(false)} className="px-4 py-2 text-sm text-gray-700 bg-gray-100 rounded">Hủy</button>
+                <button onClick={() => updateMutation.mutate()} disabled={updateMutation.isPending} className="px-4 py-2 text-sm text-white bg-blue-600 rounded disabled:opacity-50">{updateMutation.isPending ? 'Đang lưu...' : 'Lưu'}</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Items Modal */}
+      {isItemsOpen && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-10 mx-auto p-6 border w-full max-w-3xl shadow-lg rounded-md bg-white">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-semibold text-gray-900">Thêm sản phẩm vào Flash Sale</h3>
+              <button onClick={() => setIsItemsOpen(false)} className="text-gray-400 hover:text-gray-600 transition-colors">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+            <div className="space-y-3">
+              <div className="flex items-center gap-3">
+                <button onClick={() => setItems(prev => [...prev, { product_id: 0, sale_price: 0 }])} className="bg-gray-700 text-white px-3 py-1 rounded">Thêm dòng</button>
+                <div className="flex items-center gap-2">
+                  <input value={productSearch} onChange={e => setProductSearch(e.target.value)} placeholder="Tìm sản phẩm..." className="border p-2 rounded w-64" />
+                  <span className="text-sm text-gray-500">{productOptions.length} sản phẩm</span>
+                </div>
+              </div>
+              {items.map((it, idx) => (
+                <div key={idx} className="grid grid-cols-1 md:grid-cols-7 gap-3 items-center">
+                  <select
+                    className="border p-2 rounded md:col-span-3"
+                    value={it.product_id || 0}
+                    onChange={e => {
+                      const pid = Number(e.target.value)
+                      const p = productOptions.find(pp => pp.id === pid)
+                      setItems(prev => prev.map((x, i) => {
+                        if (i !== idx) return x
+                        const base = p ? p.price : undefined
+                        let sale = x.sale_price
+                        if (x.discount_percent !== undefined && base && base > 0) {
+                          const pct = Math.min(100, Math.max(0, Number(x.discount_percent)))
+                          sale = Math.max(0, Math.round((base * (100 - pct)) / 100))
+                        }
+                        return { ...x, product_id: pid, product_price: base, sale_price: sale }
+                      }))
+                    }}
+                  >
+                    <option value={0}>Chọn sản phẩm...</option>
+                    {productOptions.map(p => (
+                      <option key={p.id} value={p.id}>{p.name} • {p.price.toLocaleString()}đ</option>
+                    ))}
+                  </select>
+
+                  <input
+                    className="border p-2 rounded md:col-span-1"
+                    type="number"
+                    placeholder="% giảm"
+                    value={it.discount_percent ?? ''}
+                    onChange={e => {
+                      const val = e.target.value === '' ? undefined : Number(e.target.value)
+                      setItems(prev => prev.map((x, i) => {
+                        if (i !== idx) return x
+                        let sale = x.sale_price
+                        if (val !== undefined && x.product_price && x.product_price > 0) {
+                          const pct = Math.min(100, Math.max(0, Number(val)))
+                          sale = Math.max(0, Math.round((x.product_price * (100 - pct)) / 100))
+                        }
+                        return { ...x, discount_percent: val, sale_price: sale }
+                      }))
+                    }}
+                  />
+
+                  <input
+                    className="border p-2 rounded md:col-span-1"
+                    type="number"
+                    placeholder="Giá sale"
+                    value={it.sale_price}
+                    onChange={e => setItems(prev => prev.map((x, i) => i === idx ? { ...x, sale_price: Number(e.target.value) } : x))}
+                  />
+
+                  <input
+                    className="border p-2 rounded md:col-span-1"
+                    type="number"
+                    placeholder="Giới hạn (tuỳ chọn)"
+                    value={it.item_limit ?? ''}
+                    onChange={e => setItems(prev => prev.map((x, i) => i === idx ? { ...x, item_limit: e.target.value === '' ? null : Number(e.target.value) } : x))}
+                  />
+
+                  <button onClick={() => setItems(prev => prev.filter((_, i) => i !== idx))} className="bg-red-500 text-white px-3 py-2 rounded">Xóa</button>
+                </div>
+              ))}
+              <div className="flex justify-end">
+                <button onClick={() => addItemsMutation.mutate()} disabled={addItemsMutation.isPending} className="bg-green-600 text-white px-4 py-2 rounded">{addItemsMutation.isPending ? 'Đang lưu...' : 'Lưu sản phẩm'}</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+

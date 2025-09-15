@@ -23,7 +23,12 @@ const createWrapper = () => {
         retry: false
       }
     },
-    // logger property removed: not supported in current QueryClientConfig
+    logger: {
+      log: console.log,
+      warn: console.warn,
+      // no more errors on the console
+      error: () => null
+    }
   })
   const Provider = ({ children }: { children: React.ReactNode }) => (
     <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>

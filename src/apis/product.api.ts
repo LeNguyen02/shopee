@@ -1,6 +1,7 @@
 import { Product, ProductList, ProductListConfig } from 'src/types/product.type'
 import { SuccessResponse } from 'src/types/utils.type'
 import http from 'src/utils/http'
+import { FlashSale } from 'src/types/product.type'
 
 const URL = 'products'
 const productApi = {
@@ -31,6 +32,9 @@ const productApi = {
       requestedQuantity: number
       productName: string
     }>>(`${URL}/${id}/availability?quantity=${quantity}`)
+  },
+  getActiveFlashSale() {
+    return http.get<{ message: string; data: FlashSale | null }>('products/flash-sale/active')
   }
 }
 

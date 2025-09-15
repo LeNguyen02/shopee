@@ -2,6 +2,7 @@ const { pool } = require('../config/database')
 const migrateOrders = require('./migrateOrders')
 const migrateOrderTransactions = require('./migrateOrderTransactions')
 const { addInventoryConstraints } = require('./addInventoryConstraints')
+const migrateFlashSales = require('./migrateFlashSales')
 
 // Migration tracker
 async function ensureMigrationsTable() {
@@ -69,13 +70,6 @@ async function createBaseTables() {
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
     )
   `)
-
-  // Ensure image column exists on categories
-  try {
-    await pool.execute('ALTER TABLE categories ADD COLUMN image VARCHAR(255) NULL')
-  } catch (e) {
-    // Ignore if column already exists
-  }
 
   // products
   await pool.execute(`
@@ -173,6 +167,10 @@ async function runMigrations() {
 
     await runStepOnce('inventory_constraints', async () => {
       await addInventoryConstraints()
+    })
+
+    await runStepOnce('flash_sales', async () => {
+      await migrateFlashSales()
     })
 
     await runStepOnce('seed_basics', async () => {

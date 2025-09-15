@@ -1,12 +1,12 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Link, createSearchParams } from 'react-router-dom'
 import productApi from 'src/apis/product.api'
 import categoryApi from 'src/apis/category.api'
-import { Product } from 'src/types/product.type'
+import { Product, FlashSale } from 'src/types/product.type'
 import { Category } from 'src/types/category.type'
 import { formatCurrency, formatNumberToSocialStyle, rateSale } from 'src/utils/utils'
-import { getMainProductImage, getImageUrl } from 'src/utils/imageUtils'
+import { getMainProductImage } from 'src/utils/imageUtils'
 import path from 'src/constants/path'
 import useQueryConfig from 'src/hooks/useQueryConfig'
 
@@ -169,6 +169,116 @@ function Home() {
     const pageSize = productsData?.data?.data?.pagination?.page_size || 1
     const categories = categoriesData?.data?.data || []
 
+    // Flash sale
+    const { data: flashSaleRes } = useQuery({
+        queryKey: ['flash-sale-active'],
+        queryFn: () => productApi.getActiveFlashSale(),
+        staleTime: 30 * 1000
+    })
+    const flashSale: FlashSale | null = flashSaleRes?.data?.data || null
+    const [remaining, setRemaining] = useState<{ h: string; m: string; s: string }>({ h: '00', m: '00', s: '00' })
+    useEffect(() => {
+        if (!flashSale) return
+        const end = new Date(flashSale.end_time).getTime()
+        const tick = () => {
+            const now = Date.now()
+            const diff = Math.max(0, end - now)
+            const hours = Math.floor(diff / 3600000)
+            const minutes = Math.floor((diff % 3600000) / 60000)
+            const seconds = Math.floor((diff % 60000) / 1000)
+            setRemaining({
+                h: String(hours).padStart(2, '0'),
+                m: String(minutes).padStart(2, '0'),
+                s: String(seconds).padStart(2, '0')
+            })
+        }
+        tick()
+        const id = window.setInterval(tick, 1000)
+        return () => window.clearInterval(id)
+    }, [flashSale])
+
+    // Main banner slider state
+    const bannerImages = [
+        '/assets/img/main-banner/banner-0.jpg',
+        '/assets/img/main-banner/banner-1.png',
+        '/assets/img/main-banner/banner-2.png',
+        '/assets/img/main-banner/banner-3.png',
+        '/assets/img/main-banner/banner-4.png'
+    ]
+    const [currentBannerIndex, setCurrentBannerIndex] = useState(0)
+    const sliderRef = useRef<HTMLDivElement | null>(null)
+    const touchStartXRef = useRef<number | null>(null)
+    const touchDeltaXRef = useRef<number>(0)
+    const autoSlideTimerRef = useRef<number | null>(null)
+
+    // Auto advance banners
+    useEffect(() => {
+        const startAutoSlide = () => {
+            stopAutoSlide()
+            autoSlideTimerRef.current = window.setInterval(() => {
+                setCurrentBannerIndex((prev) => (prev + 1) % bannerImages.length)
+            }, 4000)
+        }
+
+        const stopAutoSlide = () => {
+            if (autoSlideTimerRef.current !== null) {
+                window.clearInterval(autoSlideTimerRef.current)
+                autoSlideTimerRef.current = null
+            }
+        }
+
+        startAutoSlide()
+
+        // Pause on hover (desktop)
+        const node = sliderRef.current
+        if (node) {
+            const onMouseEnter = () => stopAutoSlide()
+            const onMouseLeave = () => startAutoSlide()
+            node.addEventListener('mouseenter', onMouseEnter)
+            node.addEventListener('mouseleave', onMouseLeave)
+            return () => {
+                stopAutoSlide()
+                node.removeEventListener('mouseenter', onMouseEnter)
+                node.removeEventListener('mouseleave', onMouseLeave)
+            }
+        }
+
+        return () => {
+            stopAutoSlide()
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [])
+
+    // Touch handlers for swipe
+    const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
+        touchStartXRef.current = e.touches[0].clientX
+        touchDeltaXRef.current = 0
+    }
+
+    const handleTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
+        if (touchStartXRef.current === null) return
+        const currentX = e.touches[0].clientX
+        touchDeltaXRef.current = currentX - touchStartXRef.current
+    }
+
+    const handleTouchEnd = () => {
+        const threshold = 50 // px
+        const deltaX = touchDeltaXRef.current
+
+        if (Math.abs(deltaX) > threshold) {
+            if (deltaX < 0) {
+                // swipe left -> next
+                setCurrentBannerIndex((prev) => (prev + 1) % bannerImages.length)
+            } else {
+                // swipe right -> prev
+                setCurrentBannerIndex((prev) => (prev - 1 + bannerImages.length) % bannerImages.length)
+            }
+        }
+
+        touchStartXRef.current = null
+        touchDeltaXRef.current = 0
+    }
+
     return (
         <div id="container">
                 {/* start: container heading */}
@@ -177,17 +287,62 @@ function Home() {
                         {/* start: home-banner */}
                         <div className="home-banner grid__row">
                             <div className="main-banner grid__column-8">
-                                <ul className="main-banner__list">
-                                    <li className="main-banner__item">
-                                        <a href="#" className="main-banner__item-link">
-                                            <img
-                                                src="/assets/img/main-banner/banner-0.jpg"
-                                                alt="Main Banner"
-                                                className="main-banner__item-img"
+                                <div
+                                    ref={sliderRef}
+                                    className="main-banner__slider"
+                                    onTouchStart={handleTouchStart}
+                                    onTouchMove={handleTouchMove}
+                                    onTouchEnd={handleTouchEnd}
+                                    style={{ overflow: 'hidden', position: 'relative', borderRadius: '8px' }}
+                                >
+                                    <div
+                                        className="main-banner__track"
+                                        style={{
+                                            display: 'flex',
+                                            width: `${bannerImages.length * 100}%`,
+                                            transform: `translateX(-${currentBannerIndex * (100 / bannerImages.length)}%)`,
+                                            transition: 'transform 0.5s ease',
+                                        }}
+                                    >
+                                        {bannerImages.map((src, idx) => (
+                                            <div key={idx} style={{ flex: `0 0 ${100 / bannerImages.length}%` }}>
+                                                <a href="#" className="main-banner__item-link">
+                                                    <img src={src} alt={`Main Banner ${idx + 1}`} className="main-banner__item-img" />
+                                                </a>
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <div
+                                        className="main-banner__dots"
+                                        style={{
+                                            position: 'absolute',
+                                            bottom: '8px',
+                                            left: '50%',
+                                            transform: 'translateX(-50%)',
+                                            display: 'flex',
+                                            gap: '6px',
+                                            background: 'rgba(0,0,0,0.15)',
+                                            padding: '4px 8px',
+                                            borderRadius: '12px'
+                                        }}
+                                    >
+                                        {bannerImages.map((_, idx) => (
+                                            <button
+                                                key={idx}
+                                                aria-label={`Go to slide ${idx + 1}`}
+                                                onClick={() => setCurrentBannerIndex(idx)}
+                                                style={{
+                                                    width: '8px',
+                                                    height: '8px',
+                                                    borderRadius: '50%',
+                                                    border: 'none',
+                                                    cursor: 'pointer',
+                                                    background: idx === currentBannerIndex ? '#fff' : 'rgba(255,255,255,0.6)'
+                                                }}
                                             />
-                                        </a>
-                                    </li>
-                                </ul>
+                                        ))}
+                                    </div>
+                                </div>
                             </div>
                             <div className="right-banner-wrapper grid__column-4 hide-on-mobile-tablet">
                                 <div className="sub-banner">
@@ -327,7 +482,7 @@ function Home() {
                                             className="main-category__item-link"
                                         >
                                             <img
-                                                src={getImageUrl(category.image || '/assets/img/no-product.png')}
+                                                src={category.image || '/assets/img/no-product.png'}
                                                 alt={category.name}
                                                 className="main-category__img"
                                             />
@@ -340,6 +495,7 @@ function Home() {
                         {/* end: main category */}
 
                         {/* start: flash-sale */}
+                        {flashSale && (
                         <div className="flash-sale">
                             <div className="flash-sale__header">
                                 <img
@@ -349,13 +505,13 @@ function Home() {
                                 />
                                 <div className="flash-sale__header-countdown">
                                     <div className="flash-sale__countdown-item">
-                                        <div className="flash-sale__countdown-item-content">00</div>
+                                        <div className="flash-sale__countdown-item-content">{remaining.h}</div>
                                     </div>
                                     <div className="flash-sale__countdown-item">
-                                        <div className="flash-sale__countdown-item-content">00</div>
+                                        <div className="flash-sale__countdown-item-content">{remaining.m}</div>
                                     </div>
                                     <div className="flash-sale__countdown-item">
-                                        <div className="flash-sale__countdown-item-content">00</div>
+                                        <div className="flash-sale__countdown-item-content">{remaining.s}</div>
                                     </div>
                                 </div>
                                 <a href="#" className="flash-sale__view-all">
@@ -364,112 +520,27 @@ function Home() {
                                 </a>
                             </div>
                             <div className="flash-sale__product grid__row">
-                                <div className="flash-sale__item grid__column-2">
-                                    <a href="#" className="flash-sale__item-link">
-                                        <img
-                                            src="/assets/img/flash-sale/selrun.png"
-                                            alt="Flash Sale"
-                                            className="flash-sale__item-img"
-                                        />
-                                        <p className="flash-sale__item-price">₫79.000</p>
-                                        <div className="flash-sale__item-progress">
+                                {flashSale.items.slice(0, 6).map((item) => (
+                                    <div className="flash-sale__item grid__column-2" key={item.id}>
+                                        <Link to={`${path.productDetail}/${item.product_id}`} className="flash-sale__item-link">
                                             <div
-                                                className="flash-sale__progress-state"
-                                                style={{ left: '90px' }}
+                                                className="home-product__item-img"
+                                                style={{ backgroundImage: `url(${item.product_image || '/assets/img/no-product.png'})` }}
                                             ></div>
-                                            <span className="flash-sale__progress-text"> đã bán 53 </span>
-                                        </div>
-                                    </a>
-                                </div>
-                                <div className="flash-sale__item grid__column-2">
-                                    <a href="#" className="flash-sale__item-link">
-                                        <img
-                                            src="/assets/img/flash-sale/t-shirt.jpg"
-                                            alt="Flash Sale"
-                                            className="flash-sale__item-img"
-                                        />
-                                        <p className="flash-sale__item-price">₫259.000</p>
-                                        <div className="flash-sale__item-progress">
-                                            <div
-                                                className="flash-sale__progress-state"
-                                                style={{ left: '55px' }}
-                                            ></div>
-                                            <span className="flash-sale__progress-text"> đã bán 5 </span>
-                                        </div>
-                                    </a>
-                                </div>
-                                <div className="flash-sale__item grid__column-2">
-                                    <a href="#" className="flash-sale__item-link">
-                                        <img
-                                            src="/assets/img/flash-sale/rice-cooker.jpg"
-                                            alt="Flash Sale"
-                                            className="flash-sale__item-img"
-                                        />
-                                        <p className="flash-sale__item-price">₫1.059.000</p>
-                                        <div className="flash-sale__item-progress">
-                                            <div
-                                                className="flash-sale__progress-state"
-                                                style={{ left: '23px' }}
-                                            ></div>
-                                            <span className="flash-sale__progress-text"> đã bán 3 </span>
-                                        </div>
-                                    </a>
-                                </div>
-                                <div className="flash-sale__item grid__column-2">
-                                    <a href="#" className="flash-sale__item-link">
-                                        <img
-                                            src="/assets/img/flash-sale/case.jpg"
-                                            alt="Flash Sale"
-                                            className="flash-sale__item-img"
-                                        />
-                                        <p className="flash-sale__item-price">₫1.000</p>
-                                        <div className="flash-sale__item-progress">
-                                            <div
-                                                className="flash-sale__progress-state"
-                                                style={{ left: '120px' }}
-                                            ></div>
-                                            <span className="flash-sale__progress-text">
-                                                đã bán 189
-                                            </span>
-                                        </div>
-                                    </a>
-                                </div>
-                                <div className="flash-sale__item grid__column-2">
-                                    <a href="#" className="flash-sale__item-link">
-                                        <img
-                                            src="/assets/img/flash-sale/oreo.png"
-                                            alt="Flash Sale"
-                                            className="flash-sale__item-img"
-                                        />
-                                        <p className="flash-sale__item-price">₫46.000</p>
-                                        <div className="flash-sale__item-progress">
-                                            <div
-                                                className="flash-sale__progress-state"
-                                                style={{ left: '22px' }}
-                                            ></div>
-                                            <span className="flash-sale__progress-text"> đã bán 16 </span>
-                                        </div>
-                                    </a>
-                                </div>
-                                <div className="flash-sale__item grid__column-2">
-                                    <a href="#" className="flash-sale__item-link">
-                                        <img
-                                            src="/assets/img/flash-sale/cap.jpg"
-                                            alt="Flash Sale"
-                                            className="flash-sale__item-img"
-                                        />
-                                        <p className="flash-sale__item-price">₫1.000</p>
-                                        <div className="flash-sale__item-progress">
-                                            <div
-                                                className="flash-sale__progress-state"
-                                                style={{ left: '14px' }}
-                                            ></div>
-                                            <span className="flash-sale__progress-text"> đã bán 4 </span>
-                                        </div>
-                                    </a>
-                                </div>
+                                            <p className="home-product__item-content">{item.product_name}</p>
+                                            <div className="home-product__price-wrapper">
+                                                <span className="home-product__item-price">₫{formatCurrency(item.sale_price)}</span>
+                                                <span className="home-product__item-sold">Đã bán {formatNumberToSocialStyle(item.product_sold || 0)}</span>
+                                            </div>
+                                            <div className="home-product__item-favorite">
+                                                <span>Đang diễn ra</span>
+                                            </div>
+                                        </Link>
+                                    </div>
+                                ))}
                             </div>
                         </div>
+                        )}
                         {/* end: flash-sale */}
 
                         {/* start: simple banner */}
@@ -535,9 +606,9 @@ function Home() {
                                             {product.price_before_discount && product.price_before_discount > product.price && (
                                                 <div className="home-product__item-sale-off">
                                                     <span className="home-product__item-sale-off-percent">
-                                                        {rateSale(product.price_before_discount, product.price)}%
+                                                        - {rateSale(product.price_before_discount, product.price)}
                                                     </span>
-                                                    <span className="home-product__item-sale-off-label">giảm</span>
+                                                    <span className="home-product__item-sale-off-label"></span>
                                                 </div>
                                             )}
                                         </Link>
