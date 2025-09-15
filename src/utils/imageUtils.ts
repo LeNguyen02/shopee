@@ -13,19 +13,20 @@ export const getImageUrl = (imagePath: string): string => {
   if (imagePath.startsWith('http')) {
     try {
       const url = new URL(imagePath)
-      return url.pathname // Return just the path part for proxy
+      // Prefer absolute to backend to work on Netlify without proxy
+      return `${config.backendUrl}${url.pathname}`
     } catch {
       return imagePath
     }
   }
   
-  // If it's a relative path starting with /uploads/, use it as is (Vite proxy will handle it)
+  // If it's a relative path starting with /uploads/, prefix with backend URL
   if (imagePath.startsWith('/uploads/')) {
-    return imagePath
+    return `${config.backendUrl}${imagePath}`
   }
   
   // If it's just a filename, assume it's in uploads/products
-  return `/uploads/products/${imagePath}`
+  return `${config.backendUrl}/uploads/products/${imagePath}`
 }
 
 /**
