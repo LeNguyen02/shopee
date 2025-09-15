@@ -5,7 +5,6 @@ import CategoryManagement from './CategoryManagement'
 import ProductManagement from './ProductManagement'
 import OrdersManagement from './OrdersManagement'
 import adminApi from 'src/apis/admin.api'
-
 import FlashSaleManagement from './FlashSaleManagement'
 import UsersManagement from './UsersManagement'
 
@@ -16,10 +15,21 @@ interface AdminUser {
   roles: string
 }
 
+interface DashboardStats {
+  totalUsers: number
+  adminUsers: number
+  regularUsers: number
+  totalProducts: number
+  totalCategories: number
+  totalOrders: number
+}
+
 export default function AdminDashboard() {
   const navigate = useNavigate()
   const [adminUser, setAdminUser] = useState<AdminUser | null>(null)
   const [activeMenu, setActiveMenu] = useState('dashboard')
+  const [stats, setStats] = useState<DashboardStats | null>(null)
+  const [loadingStats, setLoadingStats] = useState(false)
 
   useEffect(() => {
     const token = localStorage.getItem('admin_token')
@@ -37,6 +47,23 @@ export default function AdminDashboard() {
     }
   }, [navigate])
 
+  useEffect(() => {
+    const fetchStats = async () => {
+      setLoadingStats(true)
+      try {
+        const res = await adminApi.getDashboard()
+        setStats(res.data.data.stats)
+      } catch (error) {
+        console.error(error)
+        toast.error('Không thể tải số liệu dashboard')
+      } finally {
+        setLoadingStats(false)
+      }
+    }
+
+    if (adminUser) fetchStats()
+  }, [adminUser])
+
   const handleLogout = () => {
     localStorage.removeItem('admin_token')
     localStorage.removeItem('admin_user')
@@ -53,6 +80,20 @@ export default function AdminDashboard() {
     { id: 'flashsales', label: 'Flash Sales', icon: 'fas fa-bolt' }
   ]
 
+  const StatCard = ({ iconClass, label, value, colorClass }: { iconClass: string; label: string; value: number | string; colorClass: string }) => (
+    <div className="bg-white p-6 rounded-lg shadow">
+      <div className="flex items-center">
+        <div className={`p-3 ${colorClass} rounded-full`}>
+          <i className={`${iconClass}`}></i>
+        </div>
+        <div className="ml-4">
+          <p className="text-gray-500 text-sm">{label}</p>
+          <p className="text-2xl font-bold">{value}</p>
+        </div>
+      </div>
+    </div>
+  )
+
   const renderContent = () => {
     switch (activeMenu) {
       case 'dashboard':
@@ -60,39 +101,12 @@ export default function AdminDashboard() {
           <div>
             <h2 className="text-2xl font-bold mb-6">Dashboard Overview</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="bg-white p-6 rounded-lg shadow">
-                <div className="flex items-center">
-                  <div className="p-3 bg-blue-100 rounded-full">
-                    <i className="fas fa-users text-blue-500"></i>
-                  </div>
-                  <div className="ml-4">
-                    <p className="text-gray-500 text-sm">Total Users</p>
-                    <p className="text-2xl font-bold">0</p>
-                  </div>
-                </div>
-              </div>
-              <div className="bg-white p-6 rounded-lg shadow">
-                <div className="flex items-center">
-                  <div className="p-3 bg-green-100 rounded-full">
-                    <i className="fas fa-box text-green-500"></i>
-                  </div>
-                  <div className="ml-4">
-                    <p className="text-gray-500 text-sm">Total Products</p>
-                    <p className="text-2xl font-bold">0</p>
-                  </div>
-                </div>
-              </div>
-              <div className="bg-white p-6 rounded-lg shadow">
-                <div className="flex items-center">
-                  <div className="p-3 bg-purple-100 rounded-full">
-                    <i className="fas fa-tags text-purple-500"></i>
-                  </div>
-                  <div className="ml-4">
-                    <p className="text-gray-500 text-sm">Total Categories</p>
-                    <p className="text-2xl font-bold">0</p>
-                  </div>
-                </div>
-              </div>
+              <StatCard iconClass="fas fa-users text-blue-500" label="Total Users" value={stats?.totalUsers ?? (loadingStats ? '...' : 0)} colorClass="bg-blue-100" />
+              <StatCard iconClass="fas fa-user-shield text-indigo-500" label="Admin Users" value={stats?.adminUsers ?? (loadingStats ? '...' : 0)} colorClass="bg-indigo-100" />
+              <StatCard iconClass="fas fa-user text-sky-500" label="Regular Users" value={stats?.regularUsers ?? (loadingStats ? '...' : 0)} colorClass="bg-sky-100" />
+              <StatCard iconClass="fas fa-box text-green-500" label="Total Products" value={stats?.totalProducts ?? (loadingStats ? '...' : 0)} colorClass="bg-green-100" />
+              <StatCard iconClass="fas fa-tags text-purple-500" label="Total Categories" value={stats?.totalCategories ?? (loadingStats ? '...' : 0)} colorClass="bg-purple-100" />
+              <StatCard iconClass="fas fa-shopping-cart text-orange-500" label="Total Orders" value={stats?.totalOrders ?? (loadingStats ? '...' : 0)} colorClass="bg-orange-100" />
             </div>
           </div>
         )

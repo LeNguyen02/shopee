@@ -7,27 +7,16 @@ import { FlashSale } from 'src/types/product.type'
 const URL = 'admin'
 
 const adminApi = {
-  // Users
-  getUsers() {
-    return httpAdmin.get<SuccessResponse<Array<{ id: number; email: string; name: string; phone: string | null; roles: 'User' | 'Admin'; verify: number; created_at: string; updated_at: string }>>>(
-      `${URL}/users`
-    )
-  },
-
-  updateUserRole(id: number, roles: 'User' | 'Admin') {
-    return httpAdmin.put<SuccessResponse<null>>(`${URL}/users/${id}/role`, { roles })
-  },
-
-  updateUser(id: number, body: Partial<{ name: string; phone: string; address: string; date_of_birth: string }>) {
-    return httpAdmin.put<SuccessResponse<null>>(`${URL}/users/${id}`, body)
-  },
-
-  deleteUser(id: number) {
-    return httpAdmin.delete<SuccessResponse<null>>(`${URL}/users/${id}`)
-  },
-
-  createUser(body: { name: string; email: string; password: string; roles: 'User' | 'Admin' }) {
-    return httpAdmin.post<SuccessResponse<{ id: number }>>(`${URL}/users`, body)
+  // Dashboard
+  getDashboard() {
+    return httpAdmin.get<SuccessResponse<{ stats: {
+      totalUsers: number
+      adminUsers: number
+      regularUsers: number
+      totalProducts: number
+      totalCategories: number
+      totalOrders: number
+    } }>>(`${URL}/dashboard`)
   },
   getUsers() {
     return httpAdmin.get<SuccessResponse<Array<{ id: number; email: string; name: string; phone: string | null; roles: 'User' | 'Admin'; verify: number; created_at: string; updated_at: string }>>>(

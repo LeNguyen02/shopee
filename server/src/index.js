@@ -19,7 +19,9 @@ const allowedOrigins = (process.env.CORS_ORIGIN || '').split(',').map(o => o.tri
 
 // Middleware
 app.use(helmet({
-  contentSecurityPolicy: false
+  contentSecurityPolicy: false,
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
+  crossOriginEmbedderPolicy: false
 }));
 app.use(cors({
   origin: (origin, callback) => {
@@ -43,6 +45,8 @@ app.use('/uploads', (req, res, next) => {
   res.header('Access-Control-Allow-Methods', 'GET');
   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
   res.header('Access-Control-Allow-Credentials', 'true');
+  // Allow cross-origin resource policy for images
+  res.header('Cross-Origin-Resource-Policy', 'cross-origin');
   next();
 }, express.static('uploads'));
 
@@ -87,7 +91,7 @@ const startServer = async () => {
       if (allowedOrigins.length) {
         console.log(`🔐 CORS allowed origins: ${allowedOrigins.join(', ')}`);
       } else {
-        console.log('🔐 CORS allowed origins: any (no CORS_ORIGIN set)');
+        console.log('🔐 CORS allowed origins: any (no CORS_ORIGIN set) 1');
       }
     });
   } catch (error) {

@@ -4,42 +4,43 @@ import { toast } from 'react-toastify'
 import { useForm } from 'react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup'
 import * as yup from 'yup'
-
 import adminApi from 'src/apis/admin.api'
+import productApi from 'src/apis/product.api'
 import categoryApi from 'src/apis/category.api'
-import { Product, CreateProductRequest, UpdateProductRequest } from 'src/types/product.type'
-import { Category } from 'src/types/category.type'
 import Button from 'src/components/Button'
 import Input from 'src/components/Input'
+import InputNumber from 'src/components/InputNumber'
 import FileUpload from 'src/components/FileUpload'
 import MultipleFileUpload from 'src/components/MultipleFileUpload'
-import config from 'src/constants/config'
+import { formatCurrency } from 'src/utils/utils'
+import { Product, CreateProductRequest, UpdateProductRequest } from 'src/types/product.type'
+import { Category } from 'src/types/category.type'
+import { getImageUrl } from 'src/utils/imageUtils'
 
 const createProductSchema = yup.object({
   name: yup.string().required('Tên sản phẩm không được để trống').min(2, 'Tên sản phẩm phải có ít nhất 2 ký tự'),
-  description: yup.string(),
-  category_id: yup.number().nullable(),
-  image: yup.string(),
-  images: yup.array().of(yup.string()).max(10, 'Tối đa 10 hình ảnh').min(0, 'Số lượng hình ảnh không hợp lệ'),
-  price: yup.number().required('Giá sản phẩm không được để trống').min(0, 'Giá sản phẩm phải lớn hơn hoặc bằng 0'),
-  price_before_discount: yup.number().nullable().min(0, 'Giá trước giảm phải lớn hơn hoặc bằng 0'),
-  quantity: yup.number().min(0, 'Số lượng phải lớn hơn hoặc bằng 0')
+  description: yup.string().optional(),
+  category_id: yup.number().required('Vui lòng chọn danh mục'),
+  price: yup.number().required('Vui lòng nhập giá').min(0, 'Giá phải lớn hơn hoặc bằng 0'),
+  price_before_discount: yup.number().optional().min(0, 'Giá phải lớn hơn hoặc bằng 0'),
+  quantity: yup.number().required('Vui lòng nhập số lượng').min(0, 'Số lượng phải lớn hơn hoặc bằng 0'),
+  image: yup.string().optional(),
+  images: yup.array().of(yup.string()).optional()
 })
 
 const updateProductSchema = yup.object({
   name: yup.string().required('Tên sản phẩm không được để trống').min(2, 'Tên sản phẩm phải có ít nhất 2 ký tự'),
-  description: yup.string(),
-  category_id: yup.number().nullable(),
-  image: yup.string(),
-  images: yup.array().of(yup.string()).max(10, 'Tối đa 10 hình ảnh').min(0, 'Số lượng hình ảnh không hợp lệ'),
-  price: yup.number().required('Giá sản phẩm không được để trống').min(0, 'Giá sản phẩm phải lớn hơn hoặc bằng 0'),
-  price_before_discount: yup.number().nullable().min(0, 'Giá trước giảm phải lớn hơn hoặc bằng 0'),
-  quantity: yup.number().min(0, 'Số lượng phải lớn hơn hoặc bằng 0')
+  description: yup.string().optional(),
+  category_id: yup.number().required('Vui lòng chọn danh mục'),
+  price: yup.number().required('Vui lòng nhập giá').min(0, 'Giá phải lớn hơn hoặc bằng 0'),
+  price_before_discount: yup.number().optional().min(0, 'Giá phải lớn hơn hoặc bằng 0'),
+  quantity: yup.number().required('Vui lòng nhập số lượng').min(0, 'Số lượng phải lớn hơn hoặc bằng 0'),
+  image: yup.string().optional(),
+  images: yup.array().of(yup.string()).optional()
 })
 
 type CreateProductFormData = yup.InferType<typeof createProductSchema>
 
-import { getImageUrl } from 'src/utils/imageUtils'
 type UpdateProductFormData = yup.InferType<typeof updateProductSchema>
 
 export default function ProductManagement() {
@@ -186,12 +187,12 @@ export default function ProductManagement() {
     setCurrentFormType('edit')
     setUpdateValue('name', product.name)
     setUpdateValue('description', product.description || '')
-    setUpdateValue('category_id', product.category_id || null)
+    setUpdateValue('category_id', Number(product.category_id ?? 0))
     setUpdateValue('image', product.image || '')
     setUpdateValue('images', flattenedImages)
-    setUpdateValue('price', product.price)
-    setUpdateValue('price_before_discount', product.price_before_discount || null)
-    setUpdateValue('quantity', product.quantity || 0)
+    setUpdateValue('price', Number(product.price ?? 0))
+    setUpdateValue('price_before_discount', product.price_before_discount ?? null)
+    setUpdateValue('quantity', Number(product.quantity ?? 0))
     setIsEditModalOpen(true)
   }
 
@@ -290,13 +291,6 @@ export default function ProductManagement() {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
     setCurrentPage(1)
-  }
-
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('vi-VN', {
-      style: 'currency',
-      currency: 'VND'
-    }).format(price)
   }
 
   if (isLoading) {
@@ -419,10 +413,10 @@ export default function ProductManagement() {
                     {product.category_name || '-'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    <div className="font-medium">{formatPrice(product.price)}</div>
-                    {product.price_before_discount && (
+                    <div className="font-medium">{formatCurrency(product.price as number)}</div>
+                    {product.price_before_discount != null && (
                       <div className="text-xs text-gray-500 line-through">
-                        {formatPrice(product.price_before_discount)}
+                        {formatCurrency(product.price_before_discount as number)}
                       </div>
                     )}
                   </td>
