@@ -5,6 +5,8 @@ import CategoryManagement from './CategoryManagement'
 import ProductManagement from './ProductManagement'
 import OrdersManagement from './OrdersManagement'
 import adminApi from 'src/apis/admin.api'
+import FlashSaleManagement from './FlashSaleManagement'
+import UsersManagement from './UsersManagement'
 
 interface AdminUser {
   id: number
@@ -74,7 +76,8 @@ export default function AdminDashboard() {
     { id: 'users', label: 'Users', icon: 'fas fa-users' },
     { id: 'categories', label: 'Categories', icon: 'fas fa-tags' },
     { id: 'products', label: 'Products', icon: 'fas fa-box' },
-    { id: 'orders', label: 'Orders', icon: 'fas fa-shopping-cart' }
+    { id: 'orders', label: 'Orders', icon: 'fas fa-shopping-cart' },
+    { id: 'flashsales', label: 'Flash Sales', icon: 'fas fa-bolt' }
   ]
 
   const StatCard = ({ iconClass, label, value, colorClass }: { iconClass: string; label: string; value: number | string; colorClass: string }) => (
@@ -108,20 +111,15 @@ export default function AdminDashboard() {
           </div>
         )
       case 'users':
-        return (
-          <div>
-            <h2 className="text-2xl font-bold mb-6">Users Management</h2>
-            <div className="bg-white p-6 rounded-lg shadow">
-              <p className="text-gray-500">Users management coming soon...</p>
-            </div>
-          </div>
-        )
+        return <UsersManagement />
       case 'categories':
         return <CategoryManagement />
       case 'products':
         return <ProductManagement />
       case 'orders':
         return <OrdersManagement />
+      case 'flashsales':
+        return <FlashSaleManagement />
       default:
         return null
     }

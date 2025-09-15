@@ -2,6 +2,7 @@ const { pool } = require('../config/database')
 const migrateOrders = require('./migrateOrders')
 const migrateOrderTransactions = require('./migrateOrderTransactions')
 const { addInventoryConstraints } = require('./addInventoryConstraints')
+const migrateFlashSales = require('./migrateFlashSales')
 
 // Migration tracker
 async function ensureMigrationsTable() {
@@ -167,6 +168,10 @@ async function runMigrations() {
       await migrateOrders()
     })
 
+    await runStepOnce('flash_sales', async () => {
+      await migrateFlashSales()
+    })
+    
     await runStepOnce('order_transactions', async () => {
       await migrateOrderTransactions()
     })

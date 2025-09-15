@@ -53,32 +53,23 @@
 .payment-methods,
 .shipping-partners {
     display: grid;
-    /* 4 cột như ảnh; tự giảm còn 3 cột khi hẹp */
-    grid-template-columns: repeat(4, 50px);
-    gap: 8px 8px;
-    /* row-gap 12, column-gap 16 */
+    grid-template-columns: repeat(auto-fit, minmax(56px, 1fr));
+    gap: 8px;
 }
 
 /* mỗi ảnh là 1 ô (tile) có nền xám nhạt, bo góc */
 .payment-methods img,
 .shipping-partners img {
     display: block;
-    /* bỏ whitespace inline */
-    width: 60px;
-    /* khớp với cột */
-
-    /* chiều cao logo đồng nhất */
+    width: 100%;
+    max-width: 72px;
     object-fit: contain;
-    /* giữ tỉ lệ gốc */
     background: #f5f5f5;
     border: 1px solid #eee;
     border-radius: 2px;
     padding: 3px;
-    /* khoảng đệm trong ô */
     box-sizing: border-box;
-    /* để padding không làm bể kích thước ô */
     margin: 0;
-    /* xoá mọi margin lạ */
 }
 
 /* App download: QR + badge đều nhau, không bị lệch khoảng */
@@ -143,12 +134,11 @@
     margin: 14px 0 10px;
 }
 
-/* Responsive: giảm còn 3 cột cho logo khi hẹp */
+/* Responsive: logo grid auto-fit on small screens */
 @media (max-width: 900px) {
-
     .payment-methods,
     .shipping-partners {
-        grid-template-columns: repeat(3, 90px);
+        grid-template-columns: repeat(auto-fit, minmax(52px, 1fr));
     }
 }
 
@@ -226,4 +216,27 @@
     .footer-column {
         flex: 1 1 100%;
     }
+}
+
+/* ---------- MOBILE: shorten footer ---------- */
+@media (max-width: 739px) {
+    .footer { margin: 20px auto 0; padding: 0 12px; }
+    .footer-columns { padding: 12px 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 12px; }
+    .footer-column { padding: 0; margin-bottom: 0; }
+
+    /* Hide long/secondary sections to shorten */
+    .country-region,
+    .bottom-logos,
+    .company-info { display: none; }
+
+    /* Collapse complex logo grids */
+    .payment-methods,
+    .shipping-partners { display: none; }
+
+    /* Reduce link density */
+    .footer-column h4 { font-size: 13px; margin-bottom: 8px; }
+    .footer-column a { font-size: 12px; }
+
+    .footer-bottom { padding: 12px; margin-top: 12px; }
+    .bottom-links { gap: 10px; margin: 8px 0; }
 }
