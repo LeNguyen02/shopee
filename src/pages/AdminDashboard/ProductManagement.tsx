@@ -39,17 +39,7 @@ const updateProductSchema = yup.object({
 
 type CreateProductFormData = yup.InferType<typeof createProductSchema>
 
-// Helper function to get complete image URL
-const getImageUrl = (imageUrl: string | null | undefined): string => {
-  if (!imageUrl) return '/no-product.png';
-  if (imageUrl.startsWith('http')) {
-    // Convert absolute URL to relative URL for proxy
-    const urlObj = new URL(imageUrl);
-    return urlObj.pathname;
-  }
-  if (imageUrl.startsWith('/uploads/')) return imageUrl;
-  return imageUrl;
-}
+import { getImageUrl } from 'src/utils/imageUtils'
 type UpdateProductFormData = yup.InferType<typeof updateProductSchema>
 
 export default function ProductManagement() {

@@ -25,6 +25,8 @@ const updateCategorySchema = yup.object({
 type CreateCategoryFormData = yup.InferType<typeof createCategorySchema>
 type UpdateCategoryFormData = yup.InferType<typeof updateCategorySchema>
 
+import { getImageUrl } from 'src/utils/imageUtils'
+
 export default function CategoryManagement() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
@@ -243,7 +245,7 @@ export default function CategoryManagement() {
                   <td className="px-6 py-4 whitespace-nowrap">
                     {category.image ? (
                       <img
-                        src={category.image}
+                        src={getImageUrl(category.image)}
                         alt={category.name}
                         className="h-12 w-12 object-cover rounded-lg"
                         onError={(e) => {
