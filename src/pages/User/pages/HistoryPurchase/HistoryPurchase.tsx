@@ -56,7 +56,7 @@ export default function HistoryPurchase() {
             {purchasesInCart?.map((purchase) => (
               <div key={purchase._id} className='mt-4 rounded-sm border-black/10 bg-white p-6 text-gray-800 shadow-sm'>
                 <Link
-                  to={`${path.home}${generateNameId({ name: purchase.product.name, id: purchase.product._id || String(purchase.product.id) })}`}
+                  to={`${path.home}${generateNameId({ name: purchase.product.name, id: String(purchase.product._id) })}`}
                   className='flex'
                 >
                   <div className='flex-shrink-0'>

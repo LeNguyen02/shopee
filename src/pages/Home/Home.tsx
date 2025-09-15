@@ -6,7 +6,7 @@ import categoryApi from 'src/apis/category.api'
 import { Product, FlashSale } from 'src/types/product.type'
 import { Category } from 'src/types/category.type'
 import { formatCurrency, formatNumberToSocialStyle, rateSale } from 'src/utils/utils'
-import { getMainProductImage } from 'src/utils/imageUtils'
+import { getMainProductImage, getImageUrl } from 'src/utils/imageUtils'
 import path from 'src/constants/path'
 import useQueryConfig from 'src/hooks/useQueryConfig'
 
@@ -279,6 +279,7 @@ function Home() {
         touchDeltaXRef.current = 0
     }
 
+
     return (
         <div id="container">
                 {/* start: container heading */}
@@ -482,7 +483,7 @@ function Home() {
                                             className="main-category__item-link"
                                         >
                                             <img
-                                                src={category.image || '/assets/img/no-product.png'}
+                                                src={getImageUrl(category.image || '/assets/img/no-product.png')}
                                                 alt={category.name}
                                                 className="main-category__img"
                                             />

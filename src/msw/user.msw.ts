@@ -1,4 +1,4 @@
-import { http, HttpResponse } from 'msw'
+import { rest } from 'msw'
 import config from 'src/constants/config'
 import HttpStatusCode from 'src/constants/httpStatusCode.enum'
 import { access_token_1s } from './auth.msw'
@@ -16,21 +16,21 @@ const meRes = {
   }
 }
 
-const meRequest = http.get(`${config.baseUrl}me`, ({ request }) => {
-  const access_token = request.headers.get('authorization')
+const meRequest = rest.get(`${config.baseUrl}me`, (req, res, ctx) => {
+  const access_token = req.headers.get('authorization')
   if (access_token === access_token_1s) {
-    return HttpResponse.json(
-      {
+    return res(
+      ctx.status(HttpStatusCode.Unauthorized),
+      ctx.json({
         message: 'Lỗi',
         data: {
           message: 'Token hết hạn',
           name: 'EXPIRED_TOKEN'
         }
-      },
-      { status: HttpStatusCode.Unauthorized }
+      })
     )
   }
-  return HttpResponse.json(meRes, { status: HttpStatusCode.Ok })
+  return res(ctx.status(HttpStatusCode.Ok), ctx.json(meRes))
 })
 
 const userRequests = [meRequest]
