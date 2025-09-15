@@ -169,7 +169,7 @@ function Home() {
     const pageSize = productsData?.data?.data?.pagination?.page_size || 1
     const categories = categoriesData?.data?.data || []
 
-    // Flash sale
+   // Flash sale
     const { data: flashSaleRes } = useQuery({
         queryKey: ['flash-sale-active'],
         queryFn: () => productApi.getActiveFlashSale(),
@@ -287,7 +287,7 @@ function Home() {
                         {/* start: home-banner */}
                         <div className="home-banner grid__row">
                             <div className="main-banner grid__column-8">
-                                <div
+                            <div
                                     ref={sliderRef}
                                     className="main-banner__slider"
                                     onTouchStart={handleTouchStart}
@@ -608,7 +608,6 @@ function Home() {
                                                     <span className="home-product__item-sale-off-percent">
                                                         - {rateSale(product.price_before_discount, product.price)}
                                                     </span>
-                                                    <span className="home-product__item-sale-off-label"></span>
                                                 </div>
                                             )}
                                         </Link>

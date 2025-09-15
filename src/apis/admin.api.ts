@@ -29,6 +29,27 @@ const adminApi = {
   createUser(body: { name: string; email: string; password: string; roles: 'User' | 'Admin' }) {
     return httpAdmin.post<SuccessResponse<{ id: number }>>(`${URL}/users`, body)
   },
+  getUsers() {
+    return httpAdmin.get<SuccessResponse<Array<{ id: number; email: string; name: string; phone: string | null; roles: 'User' | 'Admin'; verify: number; created_at: string; updated_at: string }>>>(
+      `${URL}/users`
+    )
+  },
+
+  updateUserRole(id: number, roles: 'User' | 'Admin') {
+    return httpAdmin.put<SuccessResponse<null>>(`${URL}/users/${id}/role`, { roles })
+  },
+
+  updateUser(id: number, body: Partial<{ name: string; phone: string; address: string; date_of_birth: string }>) {
+    return httpAdmin.put<SuccessResponse<null>>(`${URL}/users/${id}`, body)
+  },
+
+  deleteUser(id: number) {
+    return httpAdmin.delete<SuccessResponse<null>>(`${URL}/users/${id}`)
+  },
+
+  createUser(body: { name: string; email: string; password: string; roles: 'User' | 'Admin' }) {
+    return httpAdmin.post<SuccessResponse<{ id: number }>>(`${URL}/users`, body)
+  },
 
   // Products
   getProducts(params: {
@@ -128,8 +149,8 @@ const adminApi = {
     })
   },
 
-  // Flash Sales
-  createFlashSale(body: { name: string; start_time: string; end_time: string; is_active?: 0 | 1 }) {
+   // Flash Sales
+   createFlashSale(body: { name: string; start_time: string; end_time: string; is_active?: 0 | 1 }) {
     return httpAdmin.post<SuccessResponse<FlashSale>>(`${URL}/flash-sales`, body)
   },
 

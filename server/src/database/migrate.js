@@ -161,6 +161,10 @@ async function runMigrations() {
       await migrateOrders()
     })
 
+    await runStepOnce('flash_sales', async () => {
+      await migrateFlashSales()
+    })
+    
     await runStepOnce('order_transactions', async () => {
       await migrateOrderTransactions()
     })

@@ -1,7 +1,6 @@
 const express = require('express');
 const { pool } = require('../config/database');
 const FlashSale = require('../models/FlashSale');
-
 const router = express.Router();
 
 
@@ -175,6 +174,17 @@ router.get('/:id', async (req, res) => {
       message: 'Lỗi server',
       data: null
     });
+  }
+});
+
+// Public: get active flash sale with products
+router.get('/flash-sale/active', async (req, res) => {
+  try {
+    const sale = await FlashSale.getActiveNow();
+    res.json({ message: 'Lấy flash sale hiện tại', data: sale });
+  } catch (error) {
+    console.error('Get active flash sale error:', error);
+    res.status(500).json({ message: 'Lỗi server', data: null });
   }
 });
 

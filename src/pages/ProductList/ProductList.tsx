@@ -41,7 +41,7 @@ export default function ProductList() {
               <AsideFilter queryConfig={queryConfig} categories={categoriesData?.data.data || []} pathname="/search" />
             </div>
             <div className='col-span-12 md:col-span-9 order-1 md:order-2'>
-              <SortProductList queryConfig={queryConfig} pageSize={productsData.data.data.pagination.page_size} />
+              <SortProductList queryConfig={queryConfig} pageSize={(productsData as any).data.data.pagination.page_size} />
               <div className='mt-6 grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 items-stretch'>
                 {productsData.data.data.products.map((product) => (
                   <div className='col-span-1' key={product._id}>

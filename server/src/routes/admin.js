@@ -6,6 +6,8 @@ const User = require('../models/User');
 const Product = require('../models/Product');
 const FlashSale = require('../models/FlashSale');
 const { pool } = require('../config/database');
+const FlashSale = require('../models/FlashSale');
+
 
 const router = express.Router();
 

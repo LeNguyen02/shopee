@@ -4,6 +4,8 @@ import { toast } from 'react-toastify'
 import CategoryManagement from './CategoryManagement'
 import ProductManagement from './ProductManagement'
 import OrdersManagement from './OrdersManagement'
+import adminApi from 'src/apis/admin.api'
+
 import FlashSaleManagement from './FlashSaleManagement'
 import UsersManagement from './UsersManagement'
 
