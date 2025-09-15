@@ -1,5 +1,5 @@
 import { InputHTMLAttributes, useState } from 'react'
-import type { UseFormRegister, RegisterOptions, FieldValues, FieldPath } from 'react-hook-form'
+import type { UseFormRegister, RegisterOptions, FieldValues, FieldPath, Path } from 'react-hook-form'
 
 interface Props<TFieldValues extends FieldValues> extends InputHTMLAttributes<HTMLInputElement> {
   errorMessage?: string
@@ -8,7 +8,7 @@ interface Props<TFieldValues extends FieldValues> extends InputHTMLAttributes<HT
   classNameEye?: string
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   register?: UseFormRegister<TFieldValues>
-  rules?: RegisterOptions
+  rules?: RegisterOptions<TFieldValues, Path<TFieldValues>>
   name: FieldPath<TFieldValues>
 }
 
@@ -24,7 +24,7 @@ export default function Input<TFieldValues extends FieldValues = FieldValues>({
   ...rest
 }: Props<TFieldValues>) {
   const [openEye, setOpenEye] = useState(false)
-  const registerResult = register && name ? register(name, rules) : null
+  const registerResult = register && name ? register(name, rules as RegisterOptions<TFieldValues, Path<TFieldValues>>) : null
 
   const toggleEye = () => {
     setOpenEye((prev) => !prev)

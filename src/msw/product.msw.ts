@@ -1,4 +1,4 @@
-import { rest } from 'msw'
+import { http, HttpResponse } from 'msw'
 import config from 'src/constants/config'
 import HttpStatusCode from 'src/constants/httpStatusCode.enum'
 
@@ -239,11 +239,11 @@ const productDetailRes = {
     updatedAt: '2022-12-19T15:19:53.312Z'
   }
 }
-const productsRequest = rest.get(`${config.baseUrl}products`, (req, res, ctx) => {
-  return res(ctx.status(HttpStatusCode.Ok), ctx.json(productsRes))
+const productsRequest = http.get(`${config.baseUrl}products`, () => {
+  return HttpResponse.json(productsRes, { status: HttpStatusCode.Ok })
 })
-const productDetailRequest = rest.get(`${config.baseUrl}products/:id`, (req, res, ctx) => {
-  return res(ctx.status(HttpStatusCode.Ok), ctx.json(productDetailRes))
+const productDetailRequest = http.get(`${config.baseUrl}products/:id`, () => {
+  return HttpResponse.json(productDetailRes, { status: HttpStatusCode.Ok })
 })
 
 const productRequests = [productsRequest, productDetailRequest]
