@@ -192,13 +192,13 @@ export default function OrderDetailModal({ order, isOpen, onClose }: OrderDetail
                   <h4 className="font-medium text-gray-900 mb-3">Thông tin khách hàng</h4>
                   <div className="space-y-2 text-sm">
                     <div>
-                      <span className="font-medium">Tên:</span> {orderDetail?.user_name || 'N/A'}
+                      <span className="font-medium">Tên:</span> {orderDetail?.user?.name || 'N/A'}
                     </div>
                     <div>
-                      <span className="font-medium">Email:</span> {orderDetail?.user_email || 'N/A'}
+                      <span className="font-medium">Email:</span> {orderDetail?.user?.email || 'N/A'}
                     </div>
                     <div>
-                      <span className="font-medium">Số điện thoại:</span> {orderDetail?.user_phone || 'N/A'}
+                      <span className="font-medium">Số điện thoại:</span> {orderDetail?.user?.phone || 'N/A'}
                     </div>
                   </div>
                 </div>
