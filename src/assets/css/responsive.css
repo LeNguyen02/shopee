@@ -1,0 +1,113 @@
+/* Default hidden utility for mobile-only elements */
+.only-mobile { display: none; }
+
+/* mobile & tablet */
+@media (max-width: 1023px) {
+  :root {
+    --header-height: 68px;
+    --navbar-height: 0px;
+  }
+
+  .hide-on-mobile-tablet {
+    display: none;
+  }
+
+  .main-banner {
+    width: 100%;
+  }
+
+  /* Header compact adjustments */
+  .header__with-search {
+    margin: 0 6px;
+  }
+  .header__search {
+    height: 36px;
+  }
+  .header__search-btn {
+    width: 50px;
+  }
+}
+
+/* tablet */
+@media (min-width: 740px) and (max-width: 1023px) {
+  .hide-on-tablet {
+    display: none;
+  }
+
+  .header__cart {
+    width: 74px;
+    text-align: right;
+  }
+
+  .suggestion-category {
+    height: auto;
+  }
+
+  .header__cart-list {
+    position: fixed;
+    top: var(--header-height);
+    right: 0;
+    width: 100%;
+    padding: 0 calc((100% - 644px) / 2);
+  }
+  .header__cart-list::after {
+    display: none;
+  }
+
+  /* Product cards: 3 per row on tablet */
+  .grid__column-2 {
+    width: calc(100% / 12 * 4);
+  }
+
+  /* Header sizes on tablet */
+  .header__logo { width: 170px; }
+  .header__logo-img { width: 120px; }
+}
+
+/* mobile */
+@media (max-width: 739px) {
+  .hide-on-mobile {
+    display: none;
+  }
+
+  /* Mobile header layout - space between logo and auth buttons */
+  .header__with-search {
+    justify-content: space-between;
+    margin: 0 12px;
+  }
+
+  /* Header cart list full-width on mobile */
+  .header__cart-list {
+    position: fixed;
+    top: var(--header-height);
+    right: 0;
+    width: 100%;
+    padding: 0 12px;
+  }
+  .header__cart-list::after {
+    display: none;
+  }
+
+  /* Product cards: 2 per row on mobile */
+  .grid__column-2 {
+    width: calc(100% / 12 * 6);
+  }
+
+  /* Suggestion category: hide text, show only icon */
+  .suggestion-category { height: auto; padding: 10px 8px; }
+  .suggestion-category__item { max-width: 84px; }
+  .suggestion-category__item-content { display: none; }
+  .suggestion-category__item-icon { width: 48px; height: 48px; }
+
+  /* Header: smaller logo and tighter search */
+  .header__logo { width: 150px; }
+  .header__logo-img { width: 110px; }
+  .header__search { height: 34px; }
+  .header__search-btn { width: 44px; }
+  .header__search-icon { font-size: 1.2rem; }
+  .header__cart { width: auto; }
+
+  /* Mobile-only avatar visibility */
+  .only-mobile { display: inline-flex; }
+}
+
