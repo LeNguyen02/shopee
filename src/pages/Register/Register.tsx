@@ -17,11 +17,13 @@ import { useContext } from 'react'
 import { AppContext } from 'src/contexts/app.context'
 import Button from 'src/components/Button'
 import { Helmet } from 'react-helmet-async'
+import { useTranslation } from 'react-i18next'
 
 type FormData = Pick<Schema, 'email' | 'password' | 'confirm_password'>
 const registerSchema = schema.pick(['email', 'password', 'confirm_password'])
 
 export default function Register() {
+  const { t } = useTranslation('home')
   const { setIsAuthenticated, setProfile } = useContext(AppContext)
   const navigate = useNavigate()
   const {
@@ -74,57 +76,60 @@ export default function Register() {
   return (
     <div className='bg-orange'>
       <Helmet>
-        <title>Đăng ký | Shopee Clone</title>
-        <meta name='description' content='Đăng ký tài khoản vào dự án Shopee Clone' />
+        <title>{t('auth.register')} | Shopee Clone</title>
+        <meta name='description' content={t('auth.register') + ' tài khoản vào dự án Shopee Clone'} />
       </Helmet>
-      <div className='container'>
-        <div className='grid grid-cols-1 py-12 lg:grid-cols-5 lg:py-32 lg:pr-10'>
-          <div className='lg:col-span-2 lg:col-start-4'>
-            <form className='rounded bg-white p-10 shadow-sm' onSubmit={onSubmit} noValidate>
-              <div className='text-2xl'>Đăng ký</div>
+      <div className='container mx-auto px-4'>
+        <div className='flex justify-center items-center min-h-screen py-8'>
+          <div className='w-[90%] sm:w-[520px] max-w-[520px]'>
+            <form className='rounded-lg bg-white p-10 sm:p-16 shadow-lg border min-h-[580px] flex flex-col justify-center' onSubmit={onSubmit} noValidate>
+              <div className='text-3xl font-bold text-center mb-8 sm:mb-10 text-gray-800'>{t('auth.register')}</div>
               <Input
                 name='email'
                 register={register}
                 type='email'
-                className='mt-8'
+                className='mt-6 sm:mt-8'
                 errorMessage={errors.email?.message}
-                placeholder='Email'
+                placeholder={t('auth.email')}
+                style={{ fontSize: '16px', padding: '14px' }}
               />
               <Input
                 name='password'
                 register={register}
                 type='password'
-                className='mt-2'
-                classNameEye='absolute right-[5px] h-5 w-5 cursor-pointer top-[12px]'
+                className='mt-4 sm:mt-6'
+                classNameEye='absolute right-[8px] h-6 w-6 cursor-pointer top-[16px]'
                 errorMessage={errors.password?.message}
-                placeholder='Password'
+                placeholder={t('auth.password')}
                 autoComplete='on'
+                style={{ fontSize: '16px', padding: '14px' }}
               />
 
               <Input
                 name='confirm_password'
                 register={register}
                 type='password'
-                className='mt-2'
-                classNameEye='absolute right-[5px] h-5 w-5 cursor-pointer top-[12px]'
+                className='mt-4 sm:mt-6'
+                classNameEye='absolute right-[8px] h-6 w-6 cursor-pointer top-[16px]'
                 errorMessage={errors.confirm_password?.message}
-                placeholder='Confirm Password'
+                placeholder={t('auth.confirm_password')}
                 autoComplete='on'
+                style={{ fontSize: '16px', padding: '14px' }}
               />
 
-              <div className='mt-2'>
+              <div className='mt-6 sm:mt-10'>
                 <Button
-                  className='flex w-full items-center justify-center bg-red-500 py-4 px-2 text-sm uppercase text-white hover:bg-red-600'
+                  className='flex w-full items-center justify-center bg-red-500 py-4 sm:py-5 px-4 text-lg font-semibold uppercase text-white hover:bg-red-600 rounded-md shadow-md transition-colors duration-200'
                   isLoading={registerAccountMutation.isPending}
                   disabled={registerAccountMutation.isPending}
                 >
-                  Đăng ký
+                  {t('auth.register')}
                 </Button>
               </div>
-              <div className='mt-8 flex items-center justify-center'>
-                <span className='text-gray-400'>Bạn đã có tài khoản?</span>
-                <Link className='ml-1 text-red-400' to='/login'>
-                  Đăng nhập
+              <div className='mt-8 sm:mt-12 text-center'>
+                <span className='text-gray-600 text-lg'>{t('auth.already_have_account')}</span>
+                <Link className='ml-2 text-red-500 hover:text-red-600 font-semibold text-lg transition-colors duration-200' to='/login'>
+                  {t('auth.login')}
                 </Link>
               </div>
             </form>

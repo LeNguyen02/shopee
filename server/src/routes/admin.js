@@ -560,7 +560,7 @@ router.delete('/products/:id', requireAdmin, async (req, res) => {
 // Get all orders (admin only)
 router.get('/orders', requireAdmin, async (req, res) => {
   try {
-    const { page = 1, limit = 20, status = '', payment_status = '', search = '' } = req.query;
+    const { page = 1, limit = 20, status = '', payment_status = '', search = '', user_payment_confirmed = '' } = req.query;
     
     let whereClause = '1=1';
     const params = [];
@@ -573,6 +573,11 @@ router.get('/orders', requireAdmin, async (req, res) => {
     if (payment_status) {
       whereClause += ' AND o.payment_status = ?';
       params.push(payment_status);
+    }
+
+    if (user_payment_confirmed !== undefined) {
+      whereClause += ' AND o.user_payment_confirmed = ?';
+      params.push(user_payment_confirmed);
     }
     
     if (search) {
@@ -918,4 +923,34 @@ router.get('/flash-sales/:id', requireAdmin, async (req, res) => {
     res.status(500).json({ message: 'Lỗi server', data: null })
   }
 })
+
+// Admin: get MoMo settings
+router.get('/settings/momo', requireAdmin, async (req, res) => {
+	try {
+		const [rows] = await pool.query('SELECT setting_value FROM shop_settings WHERE setting_key = ? LIMIT 1', ['momo']);
+		const settings = rows[0]?.setting_value || {};
+		return res.json({ message: 'MoMo settings', data: { settings } });
+	} catch (error) {
+		console.error('Admin get MoMo settings error:', error);
+		return res.status(500).json({ message: 'Lỗi server', data: null });
+	}
+});
+
+// Admin: update MoMo settings
+router.put('/settings/momo', requireAdmin, async (req, res) => {
+	try {
+		const { name, account_number, qr_image_url, instructions } = req.body;
+		const settings = { name: name || '', account_number: account_number || '', qr_image_url: qr_image_url || '', instructions: instructions || '' };
+		await pool.query(
+			`INSERT INTO shop_settings (setting_key, setting_value) VALUES ('momo', ?)
+			ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value), updated_at = NOW()`,
+			[JSON.stringify(settings)]
+		);
+		return res.json({ message: 'Cập nhật MoMo settings thành công', data: { settings } });
+	} catch (error) {
+		console.error('Admin update MoMo settings error:', error);
+		return res.status(500).json({ message: 'Lỗi server', data: null });
+	}
+});
+
 module.exports = router;

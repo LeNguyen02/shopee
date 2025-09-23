@@ -87,8 +87,10 @@ export default function ProductDetail() {
   const addToCartMutation = useMutation({
     mutationFn: cartApi.addToCart,
     onError: (error: any) => {
-      const message = error.response?.data?.message || 'Có lỗi xảy ra khi thêm vào giỏ hàng'
-      toast.error(message)
+      const message = error.response?.data?.message
+      // Nếu chưa đăng nhập, global interceptor sẽ hiển thị toast + nút đăng nhập
+      if (message === 'Access token required') return
+      toast.error(message || 'Có lỗi xảy ra khi thêm vào giỏ hàng')
     }
   })
   const navigate = useNavigate()

@@ -12,18 +12,20 @@ export default function OrdersManagement() {
   const [selectedPaymentStatus, setSelectedPaymentStatus] = useState('')
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
+  const [filterUserConfirmed, setFilterUserConfirmed] = useState<'' | '0' | '1'>('')
 
   const queryClient = useQueryClient()
 
   // Fetch orders
   const { data: ordersData, isLoading } = useQuery({
-    queryKey: ['admin-orders', currentPage, searchTerm, selectedOrderStatus, selectedPaymentStatus],
+    queryKey: ['admin-orders', currentPage, searchTerm, selectedOrderStatus, selectedPaymentStatus, filterUserConfirmed],
     queryFn: () => adminApi.getOrders({
       page: currentPage,
       limit: 20,
       search: searchTerm,
       status: selectedOrderStatus,
-      payment_status: selectedPaymentStatus
+      payment_status: selectedPaymentStatus,
+      user_payment_confirmed: filterUserConfirmed === '' ? '' : (filterUserConfirmed === '1' ? 1 : 0)
     })
   })
 
@@ -195,6 +197,21 @@ export default function OrdersManagement() {
               <option value="failed">Thanh toán thất bại</option>
             </select>
           </div>
+
+          <div className="min-w-48">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Xác nhận thanh toán (MoMo)
+            </label>
+            <select
+              value={filterUserConfirmed}
+              onChange={(e) => { setFilterUserConfirmed(e.target.value as '' | '0' | '1'); setCurrentPage(1) }}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">Tất cả</option>
+              <option value="1">Người dùng đã xác nhận</option>
+              <option value="0">Chưa xác nhận</option>
+            </select>
+          </div>
           
           <button
             type="submit"
@@ -232,6 +249,12 @@ export default function OrdersManagement() {
                       Tổng tiền
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Phương thức
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      XN người dùng
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Trạng thái đơn hàng
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -263,6 +286,12 @@ export default function OrdersManagement() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         {formatCurrency(order.total_amount)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {order.payment_method}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {order.user_payment_confirmed ? 'Đã XN' : '-'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className={getStatusBadgeClass(order.order_status, 'order')}>

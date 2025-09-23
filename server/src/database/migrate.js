@@ -1,8 +1,11 @@
+require('dotenv').config()
 const { pool } = require('../config/database')
 const migrateOrders = require('./migrateOrders')
 const migrateOrderTransactions = require('./migrateOrderTransactions')
 const { addInventoryConstraints } = require('./addInventoryConstraints')
 const migrateFlashSales = require('./migrateFlashSales')
+const migrateBanners = require('./migrateBanners')
+const migrateMomo = require('./migrateMomo')
 
 // Migration tracker
 async function ensureMigrationsTable() {
@@ -171,6 +174,10 @@ async function runMigrations() {
     await runStepOnce('flash_sales', async () => {
       await migrateFlashSales()
     })
+
+  await runStepOnce('banners', async () => {
+    await migrateBanners()
+  })
     
     await runStepOnce('order_transactions', async () => {
       await migrateOrderTransactions()
@@ -178,6 +185,10 @@ async function runMigrations() {
 
     await runStepOnce('inventory_constraints', async () => {
       await addInventoryConstraints()
+    })
+
+    await runStepOnce('momo', async () => {
+      await migrateMomo()
     })
 
     await runStepOnce('seed_basics', async () => {

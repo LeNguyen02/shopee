@@ -8,7 +8,7 @@ export interface DeliveryAddress {
 }
 
 export interface PaymentMethod {
-  type: 'cod' | 'stripe'
+  type: 'cod' | 'stripe' | 'momo'
   name: string
   description: string
 }
@@ -26,7 +26,7 @@ export interface CreateOrderRequest {
   items: OrderItem[]
   delivery_address: DeliveryAddress
   message?: string
-  payment_method: 'cod' | 'stripe'
+  payment_method: 'cod' | 'stripe' | 'momo'
   total_amount: number
 }
 
@@ -36,17 +36,27 @@ export interface Order {
   items: OrderItem[]
   delivery_address: DeliveryAddress
   message?: string
-  payment_method: 'cod' | 'stripe'
+  payment_method: 'cod' | 'stripe' | 'momo'
   payment_status: 'pending' | 'paid' | 'failed'
   order_status: 'pending' | 'confirmed' | 'shipping' | 'delivered' | 'cancelled'
   total_amount: number
   created_at: string
   updated_at: string
+  momo_transfer_note?: string | null
+  user_payment_confirmed?: 0 | 1
+  user_payment_confirmed_at?: string | null
 }
 
 export interface StripePaymentIntent {
   client_secret: string
   payment_intent_id: string
+}
+
+export interface MomoSettings {
+  name: string
+  account_number: string
+  qr_image_url: string
+  instructions: string
 }
 
 export interface OrderResponse {

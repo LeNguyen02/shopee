@@ -1,21 +1,19 @@
-import { useState, useEffect } from 'react'
+import { useState, useCallback, useMemo } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'react-toastify'
 import { useForm } from 'react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup'
 import * as yup from 'yup'
 import adminApi from 'src/apis/admin.api'
-import productApi from 'src/apis/product.api'
 import categoryApi from 'src/apis/category.api'
 import Button from 'src/components/Button'
 import Input from 'src/components/Input'
-import InputNumber from 'src/components/InputNumber'
 import FileUpload from 'src/components/FileUpload'
 import MultipleFileUpload from 'src/components/MultipleFileUpload'
 import { formatCurrency } from 'src/utils/utils'
 import { Product, CreateProductRequest, UpdateProductRequest } from 'src/types/product.type'
 import { Category } from 'src/types/category.type'
-import { getImageUrl } from 'src/utils/imageUtils'
+import { handleImageError, getMainProductImage } from 'src/utils/imageUtils'
 
 const createProductSchema = yup.object({
   name: yup.string().required('Tên sản phẩm không được để trống').min(2, 'Tên sản phẩm phải có ít nhất 2 ký tự'),
@@ -59,7 +57,7 @@ export default function ProductManagement() {
 
   const queryClient = useQueryClient()
 
-  // Fetch products
+  // Fetch products with optimized query key
   const { data: productsData, isLoading } = useQuery({
     queryKey: ['admin-products', currentPage, searchTerm, selectedCategory],
     queryFn: () => adminApi.getProducts({
@@ -67,18 +65,23 @@ export default function ProductManagement() {
       limit: 10,
       search: searchTerm,
       category: selectedCategory
-    })
+    }),
+    staleTime: 30000, // Cache for 30 seconds
+    refetchOnWindowFocus: false
   })
 
   // Fetch categories
   const { data: categoriesData } = useQuery({
     queryKey: ['admin-categories'],
-    queryFn: () => categoryApi.getCategories()
+    queryFn: () => categoryApi.getCategories(),
+    staleTime: 300000, // Cache categories for 5 minutes
+    refetchOnWindowFocus: false
   })
 
-  const products = productsData?.data.data.products || []
-  const pagination = productsData?.data.data.pagination
-  const categories = categoriesData?.data.data || []
+  // Memoized products and categories to prevent unnecessary re-renders
+  const products = useMemo(() => productsData?.data.data.products || [], [productsData])
+  const pagination = useMemo(() => productsData?.data.data.pagination, [productsData])
+  const categories = useMemo(() => categoriesData?.data.data || [], [categoriesData])
   
 
   // Create product form
@@ -105,11 +108,9 @@ export default function ProductManagement() {
     resolver: yupResolver(updateProductSchema)
   })
 
-  // Watch form values for debugging
+  // Watch form values for image uploads
   const createImageValue = watchCreate('image')
-  const createImagesValue = watchCreate('images') || []
   const updateImageValue = watchUpdate('image')
-  const updateImagesValue = watchUpdate('images') || []
   
 
   // Create product mutation
@@ -175,30 +176,6 @@ export default function ProductManagement() {
     }
   })
 
-  const handleEditClick = (product: Product) => {
-    // Flatten the images array in case it's nested
-    const flattenedImages = Array.isArray(product.images) 
-      ? product.images.flat().filter((img): img is string => typeof img === 'string' && img.length > 0)
-      : []
-    
-    setEditingProduct(product)
-    setUploadedImage(product.image || null)
-    setUploadedImages(flattenedImages)
-    setCurrentFormType('edit')
-    setUpdateValue('name', product.name)
-    setUpdateValue('description', product.description || '')
-    setUpdateValue('category_id', Number(product.category_id ?? 0))
-    setUpdateValue('image', product.image || '')
-    setUpdateValue('images', flattenedImages)
-    setUpdateValue('price', Number(product.price ?? 0))
-    setUpdateValue('price_before_discount', product.price_before_discount ?? null)
-    setUpdateValue('quantity', Number(product.quantity ?? 0))
-    setIsEditModalOpen(true)
-  }
-
-  const handleDeleteClick = (id: number) => {
-    setDeleteConfirmId(id)
-  }
 
   const handleDeleteConfirm = () => {
     if (deleteConfirmId) {
@@ -288,10 +265,35 @@ export default function ProductManagement() {
     }
   }
 
-  const handleSearch = (e: React.FormEvent) => {
+  const handleSearch = useCallback((e: React.FormEvent) => {
     e.preventDefault()
     setCurrentPage(1)
-  }
+  }, [])
+
+  const handleEditClick = useCallback((product: Product) => {
+    // Flatten the images array in case it's nested
+    const flattenedImages = Array.isArray(product.images) 
+      ? product.images.flat().filter((img): img is string => typeof img === 'string' && img.length > 0)
+      : []
+    
+    setEditingProduct(product)
+    setUploadedImage(product.image || null)
+    setUploadedImages(flattenedImages)
+    setCurrentFormType('edit')
+    setUpdateValue('name', product.name)
+    setUpdateValue('description', product.description || '')
+    setUpdateValue('category_id', Number(product.category_id ?? 0))
+    setUpdateValue('image', product.image || '')
+    setUpdateValue('images', flattenedImages)
+    setUpdateValue('price', Number(product.price ?? 0))
+    setUpdateValue('price_before_discount', product.price_before_discount ?? null)
+    setUpdateValue('quantity', Number(product.quantity ?? 0))
+    setIsEditModalOpen(true)
+  }, [setUpdateValue])
+
+  const handleDeleteClick = useCallback((id: number) => {
+    setDeleteConfirmId(id)
+  }, [])
 
   if (isLoading) {
     return (
@@ -393,12 +395,10 @@ export default function ProductManagement() {
                 <tr key={product.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <img
-                      src={getImageUrl(product.image)}
+                      src={getMainProductImage(product)}
                       alt={product.name}
                       className="h-12 w-12 object-cover rounded"
-                      onError={(e) => {
-                        e.currentTarget.src = '/no-product.png'
-                      }}
+                      onError={handleImageError}
                     />
                   </td>
                   <td className="px-6 py-4">

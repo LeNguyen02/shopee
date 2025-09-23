@@ -1,14 +1,35 @@
-import React, { useEffect, useRef, useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
-import { Link, createSearchParams } from 'react-router-dom'
-import productApi from 'src/apis/product.api'
+import React, {
+  useEffect,
+  useRef,
+  useState
+} from 'react'
+
+import {
+  createSearchParams,
+  Link
+} from 'react-router-dom'
 import categoryApi from 'src/apis/category.api'
-import { Product, FlashSale } from 'src/types/product.type'
-import { Category } from 'src/types/category.type'
-import { formatCurrency, formatNumberToSocialStyle, rateSale } from 'src/utils/utils'
-import { getMainProductImage, getImageUrl } from 'src/utils/imageUtils'
+import productApi from 'src/apis/product.api'
 import path from 'src/constants/path'
 import useQueryConfig from 'src/hooks/useQueryConfig'
+import { Category } from 'src/types/category.type'
+import {
+  FlashSale,
+  Product
+} from 'src/types/product.type'
+import {
+  getImageUrl,
+  getMainProductImage
+} from 'src/utils/imageUtils'
+import {
+  formatCurrency,
+  formatNumberToSocialStyle,
+  rateSale
+} from 'src/utils/utils'
+
+import { useQuery } from '@tanstack/react-query'
+import bannerApi from 'src/apis/banner.api'
+import { useTranslation } from 'react-i18next'
 
 // Custom Pagination Component with original UI design
 function CustomPagination({ queryConfig, pageSize }: { queryConfig: any; pageSize: number }) {
@@ -18,7 +39,7 @@ function CustomPagination({ queryConfig, pageSize }: { queryConfig: any; pageSiz
     const renderPagination = () => {
         let dotAfter = false
         let dotBefore = false
-        
+
         const renderDotBefore = (index: number) => {
             if (!dotBefore) {
                 dotBefore = true
@@ -30,7 +51,7 @@ function CustomPagination({ queryConfig, pageSize }: { queryConfig: any; pageSiz
             }
             return null
         }
-        
+
         const renderDotAfter = (index: number) => {
             if (!dotAfter) {
                 dotAfter = true
@@ -137,8 +158,9 @@ function CustomPagination({ queryConfig, pageSize }: { queryConfig: any; pageSiz
 }
 
 function Home() {
+    const { t } = useTranslation('home')
     const baseQueryConfig = useQueryConfig()
-    
+
     // Set limit to 12 for 2 rows (6 products per row × 2 rows = 12 products)
     // Remove search parameters to only show today's suggestions
     const queryConfig = {
@@ -146,7 +168,7 @@ function Home() {
         limit: '12', // Always use 12 products per page
         name: undefined // Remove search name to show suggestions instead of search results
     }
-    
+
     // Fetch products for home page with pagination (2 rows = 12 products)
     const { data: productsData } = useQuery({
         queryKey: ['products', 'home', queryConfig],
@@ -169,7 +191,7 @@ function Home() {
     const pageSize = productsData?.data?.data?.pagination?.page_size || 1
     const categories = categoriesData?.data?.data || []
 
-   // Flash sale
+    // Flash sale
     const { data: flashSaleRes } = useQuery({
         queryKey: ['flash-sale-active'],
         queryFn: () => productApi.getActiveFlashSale(),
@@ -197,14 +219,12 @@ function Home() {
         return () => window.clearInterval(id)
     }, [flashSale])
 
-    // Main banner slider state
-    const bannerImages = [
-        '/assets/img/main-banner/banner-0.jpg',
-        '/assets/img/main-banner/banner-1.png',
-        '/assets/img/main-banner/banner-2.png',
-        '/assets/img/main-banner/banner-3.png',
-        '/assets/img/main-banner/banner-4.png'
-    ]
+    // Banners
+    const { data: mainBannersRes } = useQuery({
+        queryKey: ['banners', 'main'],
+        queryFn: () => bannerApi.getBanners({ position: 'main' })
+    })
+    const bannerImages = (mainBannersRes?.data?.data || []).map((b: any) => getImageUrl(b.image))
     const [currentBannerIndex, setCurrentBannerIndex] = useState(0)
     const sliderRef = useRef<HTMLDivElement | null>(null)
     const touchStartXRef = useRef<number | null>(null)
@@ -282,221 +302,227 @@ function Home() {
 
     return (
         <div id="container">
-                {/* start: container heading */}
-                <div className="container__heading">
-                    <div className="grid wide">
-                        {/* start: home-banner */}
-                        <div className="home-banner grid__row">
-                            <div className="main-banner grid__column-8">
+            {/* start: container heading */}
+            <div className="container__heading">
+                <div className="grid wide">
+                    {/* start: home-banner */}
+                    <div className="home-banner grid__row">
+                        <div className="main-banner grid__column-8">
                             <div
-                                    ref={sliderRef}
-                                    className="main-banner__slider"
-                                    onTouchStart={handleTouchStart}
-                                    onTouchMove={handleTouchMove}
-                                    onTouchEnd={handleTouchEnd}
-                                    style={{ overflow: 'hidden', position: 'relative', borderRadius: '8px' }}
+                                ref={sliderRef}
+                                className="main-banner__slider"
+                                onTouchStart={handleTouchStart}
+                                onTouchMove={handleTouchMove}
+                                onTouchEnd={handleTouchEnd}
+                                style={{ overflow: 'hidden', position: 'relative', borderRadius: '8px' }}
+                            >
+                                <div
+                                    className="main-banner__track"
+                                    style={{
+                                        display: 'flex',
+                                        width: `${Math.max(bannerImages.length,1) * 100}%`,
+                                        transform: `translateX(-${bannerImages.length ? (currentBannerIndex * (100 / bannerImages.length)) : 0}%)`,
+                                        transition: 'transform 0.5s ease',
+                                    }}
                                 >
-                                    <div
-                                        className="main-banner__track"
-                                        style={{
-                                            display: 'flex',
-                                            width: `${bannerImages.length * 100}%`,
-                                            transform: `translateX(-${currentBannerIndex * (100 / bannerImages.length)}%)`,
-                                            transition: 'transform 0.5s ease',
-                                        }}
-                                    >
-                                        {bannerImages.map((src, idx) => (
-                                            <div key={idx} style={{ flex: `0 0 ${100 / bannerImages.length}%` }}>
-                                                <a href="#" className="main-banner__item-link">
-                                                    <img src={src} alt={`Main Banner ${idx + 1}`} className="main-banner__item-img" />
-                                                </a>
-                                            </div>
-                                        ))}
-                                    </div>
-                                    <div
-                                        className="main-banner__dots"
-                                        style={{
-                                            position: 'absolute',
-                                            bottom: '8px',
-                                            left: '50%',
-                                            transform: 'translateX(-50%)',
-                                            display: 'flex',
-                                            gap: '6px',
-                                            background: 'rgba(0,0,0,0.15)',
-                                            padding: '4px 8px',
-                                            borderRadius: '12px'
-                                        }}
-                                    >
-                                        {bannerImages.map((_, idx) => (
-                                            <button
-                                                key={idx}
-                                                aria-label={`Go to slide ${idx + 1}`}
-                                                onClick={() => setCurrentBannerIndex(idx)}
-                                                style={{
-                                                    width: '8px',
-                                                    height: '8px',
-                                                    borderRadius: '50%',
-                                                    border: 'none',
-                                                    cursor: 'pointer',
-                                                    background: idx === currentBannerIndex ? '#fff' : 'rgba(255,255,255,0.6)'
-                                                }}
-                                            />
-                                        ))}
-                                    </div>
+                                    {bannerImages.length === 0 ? (
+                                        <div style={{ flex: '0 0 100%' }}>
+                                            <a href="#" className="main-banner__item-link">
+                                                <img src="/assets/img/main-banner/banner-0.jpg" alt="Banner" className="main-banner__item-img" />
+                                            </a>
+                                        </div>
+                                    ) : bannerImages.map((src, idx) => (
+                                        <div key={idx} style={{ flex: `0 0 ${100 / bannerImages.length}%` }}>
+                                            <a href="#" className="main-banner__item-link">
+                                                <img src={src} alt={`Main Banner ${idx + 1}`} className="main-banner__item-img" />
+                                            </a>
+                                        </div>
+                                    ))}
                                 </div>
-                            </div>
-                            <div className="right-banner-wrapper grid__column-4 hide-on-mobile-tablet">
-                                <div className="sub-banner">
-                                    <a href="#" className="sub-banner__link">
-                                        <img
-                                            src="/assets/img/right-side-banner/banner-0.png"
-                                            alt="Right Banner"
-                                            className="sub-banner__img"
-                                        />
-                                    </a>
-                                </div>
-                                <div className="sub-banner">
-                                    <a href="#" className="sub-banner__link">
-                                        <img
-                                            src="/assets/img/right-side-banner/banner-1.png"
-                                            alt="Right Banner"
-                                            className="sub-banner__img"
-                                        />
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                        {/* end: home-banner */}
-
-                        {/* start: suggestion category */}
-                        <div className="suggestion-category">
-                            <a href="#" className="suggestion-category__item">
-                                <img
-                                    src="/assets/img/suggestion-category/sale-time.gif"
-                                    alt="Icon"
-                                    className="suggestion-category__item-icon"
-                                />
-                                <p className="suggestion-category__item-content">
-                                    khung giờ săn sale
-                                </p>
-                            </a>
-                            <a href="#" className="suggestion-category__item">
-                                <img
-                                    src="/assets/img/suggestion-category/cheap.png"
-                                    alt="Icon"
-                                    className="suggestion-category__item-icon"
-                                />
-                                <p className="suggestion-category__item-content">
-                                    gì cũng rẻ - mua là freeship
-                                </p>
-                            </a>
-                            <a href="#" className="suggestion-category__item">
-                                <img
-                                    src="/assets/img/suggestion-category/freeship-xtra.png"
-                                    alt="Icon"
-                                    className="suggestion-category__item-icon"
-                                />
-                                <p className="suggestion-category__item-content">
-                                    thứ 4 freeship - x4 Ưu đãi
-                                </p>
-                            </a>
-                            <a href="#" className="suggestion-category__item">
-                                <img
-                                    src="/assets/img/suggestion-category/cashback.png"
-                                    alt="Icon"
-                                    className="suggestion-category__item-icon"
-                                />
-                                <p className="suggestion-category__item-content">
-                                    hoàn xu 6% - lên đến 200K
-                                </p>
-                            </a>
-                            <a href="#" className="suggestion-category__item">
-                                <img
-                                    src="/assets/img/suggestion-category/nice-price-good.png"
-                                    alt="Icon"
-                                    className="suggestion-category__item-icon"
-                                />
-                                <p className="suggestion-category__item-content">
-                                    hàng hiệu giá tốt
-                                </p>
-                            </a>
-                            <a href="#" className="suggestion-category__item">
-                                <img
-                                    src="/assets/img/suggestion-category/international-goods.png"
-                                    alt="Icon"
-                                    className="suggestion-category__item-icon"
-                                />
-                                <p className="suggestion-category__item-content">hàng quốc tế</p>
-                            </a>
-                            <a href="#" className="suggestion-category__item">
-                                <img
-                                    src="/assets/img/suggestion-category/digital-product.png"
-                                    alt="Icon"
-                                    className="suggestion-category__item-icon"
-                                />
-                                <p className="suggestion-category__item-content">
-                                    nạp thẻ, hoá đơn & phim
-                                </p>
-                            </a>
-                            <a href="#" className="suggestion-category__item">
-                                <img
-                                    src="/assets/img/suggestion-category/deal-1k.png"
-                                    alt="Icon"
-                                    className="suggestion-category__item-icon"
-                                />
-                                <p className="suggestion-category__item-content">deal sốc từ 1K</p>
-                            </a>
-                        </div>
-                        {/* end: suggestion category */}
-                    </div>
-                </div>
-                {/* end: container heading */}
-
-                {/* start: container body */}
-                <div className="container__body">
-                    <div className="grid wide">
-                        {/* start: welcome banner */}
-                        <div className="welcome-banner">
-                            <a href="#" className="welcome-banner__link">
-                                <img
-                                    src="/assets/img/welcome_banner.png"
-                                    alt="Welcome Banner"
-                                    className="welcome-banner__img"
-                                />
-                            </a>
-                        </div>
-                        {/* end: welcome banner */}
-
-                        {/* start: main category */}
-                        <div className="main-category">
-                            <div className="main-category__heading">danh mục</div>
-                            <div className="main-category__list">
-                                {categories.map((category: Category) => (
-                                    <div key={category.id} className="main-category__item">
-                                        <Link 
-                                            to={{
-                                                pathname: path.search,
-                                                search: createSearchParams({
-                                                    category: category.id.toString()
-                                                }).toString()
+                                <div
+                                    className="main-banner__dots"
+                                    style={{
+                                        position: 'absolute',
+                                        bottom: '8px',
+                                        left: '50%',
+                                        transform: 'translateX(-50%)',
+                                        display: 'flex',
+                                        gap: '6px',
+                                        background: 'rgba(0,0,0,0.15)',
+                                        padding: '4px 8px',
+                                        borderRadius: '12px'
+                                    }}
+                                >
+                                    {bannerImages.length > 0 && bannerImages.map((_, idx) => (
+                                        <button
+                                            key={idx}
+                                            aria-label={`Go to slide ${idx + 1}`}
+                                            onClick={() => setCurrentBannerIndex(idx)}
+                                            style={{
+                                                width: '8px',
+                                                height: '8px',
+                                                borderRadius: '50%',
+                                                border: 'none',
+                                                cursor: 'pointer',
+                                                background: idx === currentBannerIndex ? '#fff' : 'rgba(255,255,255,0.6)'
                                             }}
-                                            className="main-category__item-link"
-                                        >
-                                            <img
-                                                src={getImageUrl(category.image || '/assets/img/no-product.png')}
-                                                alt={category.name}
-                                                className="main-category__img"
-                                            />
-                                            <div className="main-category__content">{category.name}</div>
-                                        </Link>
-                                    </div>
-                                ))}
+                                        />
+                                    ))}
+                                </div>
                             </div>
                         </div>
-                        {/* end: main category */}
+                        <div className="right-banner-wrapper grid__column-4 hide-on-mobile-tablet">
+                            <div className="sub-banner">
+                                <a href="#" className="sub-banner__link">
+                                    <img
+                                        src="/assets/img/right-side-banner/banner-0.png"
+                                        alt="Right Banner"
+                                        className="sub-banner__img"
+                                    />
+                                </a>
+                            </div>
+                            <div className="sub-banner">
+                                <a href="#" className="sub-banner__link">
+                                    <img
+                                        src="/assets/img/right-side-banner/banner-1.png"
+                                        alt="Right Banner"
+                                        className="sub-banner__img"
+                                    />
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    {/* end: home-banner */}
 
-                        {/* start: flash-sale */}
-                        {flashSale && (
+                    {/* start: suggestion category */}
+                    <div className="suggestion-category">
+                        <a href="#" className="suggestion-category__item">
+                            <img
+                                src="/assets/img/suggestion-category/sale-time.gif"
+                                alt="Icon"
+                                className="suggestion-category__item-icon"
+                            />
+                            <p className="suggestion-category__item-content">
+                                {t('home.sale_time_hunt')}
+                            </p>
+                        </a>
+                        <a href="#" className="suggestion-category__item">
+                            <img
+                                src="/assets/img/suggestion-category/cheap.png"
+                                alt="Icon"
+                                className="suggestion-category__item-icon"
+                            />
+                            <p className="suggestion-category__item-content">
+                                {t('home.everything_cheap')}
+                            </p>
+                        </a>
+                        <a href="#" className="suggestion-category__item">
+                            <img
+                                src="/assets/img/suggestion-category/freeship-xtra.png"
+                                alt="Icon"
+                                className="suggestion-category__item-icon"
+                            />
+                            <p className="suggestion-category__item-content">
+                                {t('home.wednesday_freeship')}
+                            </p>
+                        </a>
+                        <a href="#" className="suggestion-category__item">
+                            <img
+                                src="/assets/img/suggestion-category/cashback.png"
+                                alt="Icon"
+                                className="suggestion-category__item-icon"
+                            />
+                            <p className="suggestion-category__item-content">
+                                {t('home.cashback')}
+                            </p>
+                        </a>
+                        <a href="#" className="suggestion-category__item">
+                            <img
+                                src="/assets/img/suggestion-category/nice-price-good.png"
+                                alt="Icon"
+                                className="suggestion-category__item-icon"
+                            />
+                            <p className="suggestion-category__item-content">
+                                {t('home.brand_good_price')}
+                            </p>
+                        </a>
+                        <a href="#" className="suggestion-category__item">
+                            <img
+                                src="/assets/img/suggestion-category/international-goods.png"
+                                alt="Icon"
+                                className="suggestion-category__item-icon"
+                            />
+                            <p className="suggestion-category__item-content">{t('home.international_goods')}</p>
+                        </a>
+                        <a href="#" className="suggestion-category__item">
+                            <img
+                                src="/assets/img/suggestion-category/digital-product.png"
+                                alt="Icon"
+                                className="suggestion-category__item-icon"
+                            />
+                            <p className="suggestion-category__item-content">
+                                {t('home.digital_products')}
+                            </p>
+                        </a>
+                        <a href="#" className="suggestion-category__item">
+                            <img
+                                src="/assets/img/suggestion-category/deal-1k.png"
+                                alt="Icon"
+                                className="suggestion-category__item-icon"
+                            />
+                            <p className="suggestion-category__item-content">{t('home.shock_deals')}</p>
+                        </a>
+                    </div>
+                    {/* end: suggestion category */}
+                </div>
+            </div>
+            {/* end: container heading */}
+
+            {/* start: container body */}
+            <div className="container__body">
+                <div className="grid wide">
+                    {/* start: welcome banner */}
+                    <div className="welcome-banner">
+                        <a href="#" className="welcome-banner__link">
+                            <img
+                                src="/assets/img/welcome_banner.png"
+                                alt="Welcome Banner"
+                                className="welcome-banner__img"
+                            />
+                        </a>
+                    </div>
+                    {/* end: welcome banner */}
+
+                    {/* start: main category */}
+                    <div className="main-category">
+                        <div className="main-category__heading">{t('home.categories')}</div>
+                        <div className="main-category__list">
+                            {categories.map((category: Category) => (
+                                <div key={category.id} className="main-category__item">
+                                    <Link
+                                        to={{
+                                            pathname: path.search,
+                                            search: createSearchParams({
+                                                category: category.id.toString()
+                                            }).toString()
+                                        }}
+                                        className="main-category__item-link"
+                                    >
+                                        <img
+                                            src={getImageUrl(category.image || '/assets/img/no-product.png')}
+                                            alt={category.name}
+                                            className="main-category__img"
+                                        />
+                                        <div className="main-category__content">{category.name}</div>
+                                    </Link>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                    {/* end: main category */}
+
+                    {/* start: flash-sale */}
+                    {flashSale && (
                         <div className="flash-sale">
                             <div className="flash-sale__header">
                                 <img
@@ -526,7 +552,7 @@ function Home() {
                                         <Link to={`${path.productDetail}/${item.product_id}`} className="flash-sale__item-link">
                                             <div
                                                 className="home-product__item-img"
-                                                style={{ backgroundImage: `url(${getMainProductImage({ image: item.product_image || '', images: [] })})` }}
+                                                style={{ backgroundImage: `url(${item.product_image || '/assets/img/no-product.png'})` }}
                                             ></div>
                                             <p className="home-product__item-content">{item.product_name}</p>
                                             <div className="home-product__price-wrapper">
@@ -541,93 +567,67 @@ function Home() {
                                 ))}
                             </div>
                         </div>
-                        )}
-                        {/* end: flash-sale */}
+                    )}
+                    {/* end: flash-sale */}
 
-                        {/* start: simple banner */}
-                        <div className="simple-banner grid__row">
-                            <img
-                                src="/assets/img/simple-banner.png"
-                                alt="Simple Banner"
-                                className="simple-banner__img"
-                            />
-                            <div className="simple-banner__click-section-wrap grid__row">
-                                <a
-                                    href="https://google.com"
-                                    target="_blank"
-                                    className="simple-banner__click-section-item grid__column-4"
-                                    rel="noopener noreferrer"
-                                ></a>
-                                <a
-                                    href="https://github.com/K1ethoang"
-                                    target="_blank"
-                                    className="simple-banner__click-section-item grid__column-4"
-                                    rel="noopener noreferrer"
-                                ></a>
-                                <a
-                                    href="https://youtube.com"
-                                    target="_blank"
-                                    className="simple-banner__click-section-item grid__column-4"
-                                    rel="noopener noreferrer"
-                                ></a>
-                            </div>
-                        </div>
-                        {/* end: simple banner */}
+                    {/* start: simple banner */}
 
-                        {/* start: product */}
-                        <div className="home-product">
-                            <div className="home-product__heading">
-                                gợi ý hôm nay
-                            </div>
-                            <div className="home-product__list">
-                                <div className="grid__row">
-                                    {products.map((product: Product) => (
-                                        <Link 
-                                            key={product.id} 
-                                            to={`${path.productDetail}/${product.id}`} 
-                                            className="home-product__item grid__column-2"
-                                        >
-                                            <div
-                                                className="home-product__item-img"
-                                                style={{
-                                                    backgroundImage: `url(${getMainProductImage(product)})`
-                                                }}
-                                            ></div>
-                                            <p className="home-product__item-content">
-                                                {product.name}
-                                            </p>
-                                            <div className="home-product__price-wrapper">
-                                                <span className="home-product__item-price">₫{formatCurrency(product.price)}</span>
-                                                <span className="home-product__item-sold">Đã bán {formatNumberToSocialStyle(product.sold)}</span>
-                                            </div>
-                                            <div className="home-product__item-favorite">
-                                                <i className="home-product__item-favorite-icon fa-solid fa-check"></i>
-                                                <span>Yêu thích</span>
-                                            </div>
-                                            {product.price_before_discount && product.price_before_discount > product.price && (
-                                                <div className="home-product__item-sale-off">
-                                                    <span className="home-product__item-sale-off-percent">
-                                                        - {rateSale(product.price_before_discount, product.price)}
-                                                    </span>
-                                                </div>
-                                            )}
-                                        </Link>
-                                    ))}
-                                </div>
-                                {/* start: paginations */}
-                                {productsData && (
-                                    <CustomPagination 
-                                        queryConfig={queryConfig} 
-                                        pageSize={pageSize} 
-                                    />
-                                )}
-                                {/* end: paginations */}
-                            </div>
+                    {/* end: simple banner */}
+
+                    {/* start: product */}
+                    <div className="home-product">
+                        <div className="home-product__heading">
+                            {t('home.today_suggestions')}
                         </div>
-                        {/* end: product */}
+                        <div className="home-product__list">
+                            <div className="grid__row">
+                                {products.map((product: Product) => (
+                                    <Link
+                                        key={product.id}
+                                        to={`${path.productDetail}/${product.id}`}
+                                        className="home-product__item grid__column-2"
+                                    >
+                                        <div
+                                            className="home-product__item-img"
+                                            style={{
+                                                backgroundImage: `url(${getMainProductImage(product)})`
+                                            }}
+                                        ></div>
+                                        <p className="home-product__item-content">
+                                            {product.name}
+                                        </p>
+                                        <div className="home-product__price-wrapper">
+                                            <span className="home-product__item-price">₫{formatCurrency(product.price)}</span>
+                                            <span className="home-product__item-sold">{t('home.sold')} {formatNumberToSocialStyle(product.sold)}</span>
+                                        </div>
+                                        <div className="home-product__item-favorite">
+                                            <i className="home-product__item-favorite-icon fa-solid fa-check"></i>
+                                            <span>{t('home.favorite')}</span>
+                                        </div>
+                                        {product.price_before_discount && product.price_before_discount > product.price && (
+                                            <div className="home-product__item-sale-off">
+                                                <span className="home-product__item-sale-off-percent">
+                                                    - {rateSale(product.price_before_discount, product.price)}
+                                                </span>
+                                            </div>
+                                        )}
+                                    </Link>
+                                ))}
+                            </div>
+                            {/* start: paginations */}
+                            {productsData && (
+                                <CustomPagination
+                                    queryConfig={queryConfig}
+                                    pageSize={pageSize}
+                                />
+                            )}
+                            {/* end: paginations */}
+                        </div>
                     </div>
+                    {/* end: product */}
                 </div>
             </div>
+        </div>
     )
 }
 

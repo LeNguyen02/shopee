@@ -84,14 +84,14 @@ export default function AdminLogin() {
 
   return (
     <div className='bg-orange'>
-      <div className='container'>
-        <div className='grid grid-cols-1 py-12 lg:grid-cols-5 lg:py-32 lg:pr-10'>
-          <div className='lg:col-span-2 lg:col-start-4'>
-            <form className='rounded bg-white p-10 shadow-sm' onSubmit={onSubmit} noValidate>
-              <div className='text-3xl font-bold text-center mb-8 text-orange-600'>
+      <div className='container mx-auto px-4'>
+        <div className='flex justify-center items-center min-h-screen py-8'>
+          <div className='w-[85%] sm:w-full sm:max-w-none sm:min-w-[600px] max-w-[600px]'>
+            <form className='rounded-lg bg-white p-10 sm:p-12 shadow-lg border min-h-[450px] flex flex-col justify-center' onSubmit={onSubmit} noValidate>
+              <div className='text-3xl font-bold text-center mb-6 sm:mb-8 text-orange-600'>
                 Admin Login
               </div>
-              <div className='text-lg text-center mb-8 text-gray-600'>
+              <div className='text-lg text-center mb-8 sm:mb-10 text-gray-600'>
                 Đăng nhập để quản lý hệ thống
               </div>
               
@@ -99,25 +99,27 @@ export default function AdminLogin() {
                 name='email'
                 register={register}
                 type='email'
-                className='mt-8 text-lg'
+                className='mt-8 sm:mt-10 text-lg'
                 errorMessage={errors.email?.message}
                 placeholder='Email của bạn'
+                style={{ fontSize: '16px', padding: '16px' }}
               />
               
               <Input
                 name='password'
                 register={register}
                 type='password'
-                className='mt-4 text-lg'
+                className='mt-4 sm:mt-6 text-lg'
                 errorMessage={errors.password?.message}
                 placeholder='Mật khẩu'
                 autoComplete='on'
+                style={{ fontSize: '16px', padding: '16px' }}
               />
               
-              <div className='mt-6'>
+              <div className='mt-6 sm:mt-10'>
                 <Button
                   type='submit'
-                  className='flex w-full items-center justify-center bg-red-500 px-4 py-4 text-lg font-semibold uppercase text-white hover:bg-red-600 rounded-md shadow-md border-0 min-h-[50px]'
+                  className='flex w-full items-center justify-center bg-red-500 px-4 py-4 sm:py-5 text-lg font-semibold uppercase text-white hover:bg-red-600 rounded-md shadow-md border-0 min-h-[50px]'
                   isLoading={isLoading}
                   disabled={adminLoginMutation.isPending}
                 >
@@ -125,7 +127,7 @@ export default function AdminLogin() {
                 </Button>
               </div>
               
-              <div className='mt-8 text-center'>
+              <div className='mt-8 sm:mt-12 text-center'>
                 <div className='flex items-center justify-center'>
                   <span className='text-gray-500 text-base'>Quay lại trang chủ?</span>
                   <Link className='ml-2 text-orange-500 hover:text-orange-600 font-medium text-base' to='/'>

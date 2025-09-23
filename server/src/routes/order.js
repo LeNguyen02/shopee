@@ -30,7 +30,7 @@ router.post('/', authenticateToken, async (req, res) => {
       });
     }
 
-    if (!payment_method || !['cod', 'stripe'].includes(payment_method)) {
+    if (!payment_method || !['cod', 'stripe', 'momo'].includes(payment_method)) {
       return res.status(400).json({
         message: 'Phương thức thanh toán không hợp lệ',
         data: null
@@ -247,6 +247,18 @@ router.get('/user', authenticateToken, async (req, res) => {
 });
 
 // Get order by ID
+// Public: get MoMo settings (must be before any parameterized '/:id' route)
+router.get('/momo-settings', async (req, res) => {
+  try {
+    const [rows] = await pool.query('SELECT setting_value FROM shop_settings WHERE setting_key = ? LIMIT 1', ['momo']);
+    const settings = rows[0]?.setting_value || {};
+    return res.json({ message: 'MoMo settings', data: { settings } });
+  } catch (error) {
+    console.error('Get MoMo settings error:', error);
+    return res.status(500).json({ message: 'Lỗi server', data: null });
+  }
+});
+
 router.get('/:id', authenticateToken, async (req, res) => {
   try {
     const orderId = req.params.id;
@@ -520,6 +532,63 @@ router.put('/:id/cancel', authenticateToken, async (req, res) => {
   } finally {
     connection.release();
   }
+});
+
+ 
+
+// User confirms MoMo transfer
+router.post('/:id/momo-confirm', authenticateToken, async (req, res) => {
+	try {
+		const orderId = req.params.id;
+		const userId = req.user.id;
+		const { transfer_note } = req.body;
+
+		const [orderRows] = await pool.query('SELECT * FROM orders WHERE id = ? AND user_id = ?', [orderId, userId]);
+		if (orderRows.length === 0) {
+			return res.status(404).json({ message: 'Đơn hàng không tồn tại', data: null });
+		}
+		const order = orderRows[0];
+		if (order.payment_method !== 'momo') {
+			return res.status(400).json({ message: 'Đơn hàng này không sử dụng thanh toán MoMo', data: null });
+		}
+
+		await pool.query(
+			'UPDATE orders SET momo_transfer_note = ?, user_payment_confirmed = 1, user_payment_confirmed_at = NOW(), updated_at = NOW() WHERE id = ?',
+			[transfer_note || null, orderId]
+		);
+
+		const [updatedOrderRows] = await pool.query(`
+			SELECT 
+				o.*,
+				JSON_ARRAYAGG(
+					JSON_OBJECT(
+						'product_id', oi.product_id,
+						'product_name', oi.product_name,
+						'product_image', oi.product_image,
+						'price', oi.price,
+						'price_before_discount', oi.price_before_discount,
+						'quantity', oi.quantity
+					)
+				) as items
+			FROM orders o
+			LEFT JOIN order_items oi ON o.id = oi.order_id
+			WHERE o.id = ?
+			GROUP BY o.id
+		`, [orderId]);
+
+		const updatedOrder = updatedOrderRows[0];
+		if (typeof updatedOrder.delivery_address === 'string') {
+			updatedOrder.delivery_address = JSON.parse(updatedOrder.delivery_address);
+		}
+		if (typeof updatedOrder.items === 'string') {
+			updatedOrder.items = JSON.parse(updatedOrder.items);
+		}
+
+		return res.json({ message: 'Đã ghi nhận xác nhận thanh toán MoMo', data: { order: updatedOrder } });
+	} catch (error) {
+		console.error('MoMo confirm error:', error);
+		return res.status(500).json({ message: 'Lỗi server', data: null });
+	}
 });
 
 module.exports = router;

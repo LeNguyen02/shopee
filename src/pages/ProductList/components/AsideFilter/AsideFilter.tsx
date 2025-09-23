@@ -139,7 +139,7 @@ export default function AsideFilter({ queryConfig, categories, pathname = path.h
       </Link>
       <div className='my-6 h-[1px] bg-gray-300' />
       <div className='my-6'>
-        <div className='text-xl font-semibold'>Khoảng giá</div>
+        <div className='text-xl font-semibold'>{t('product.price_range')}</div>
         <form className='mt-4' onSubmit={onSubmit}>
           <div className='flex items-start gap-3'>
             <Controller
@@ -186,19 +186,19 @@ export default function AsideFilter({ queryConfig, categories, pathname = path.h
           </div>
           <div className='mt-2 min-h-[1.5rem] text-center text-lg text-red-600'>{errors.price_min?.message}</div>
           <Button className='flex w-full items-center justify-center bg-orange p-4 text-lg uppercase text-white hover:bg-orange/80 rounded-lg'>
-            Áp dụng
+            {t('common.confirm')}
           </Button>
         </form>
       </div>
       <div className='my-6 h-[1px] bg-gray-300' />
-      <div className='text-xl font-semibold'>Đánh giá</div>
+      <div className='text-xl font-semibold'>{t('product.rating')}</div>
       <RatingStars queryConfig={queryConfig} />
       <div className='my-6 h-[1px] bg-gray-300' />
       <Button
         onClick={handleRemoveAll}
         className='flex w-full items-center justify-center bg-orange p-4 text-lg uppercase text-white hover:bg-orange/80 rounded-lg'
       >
-        Xóa tất cả
+        {t('common.delete')} {t('common.all')}
       </Button>
     </div>
   )

@@ -45,6 +45,7 @@ const AdminDashboard = lazy(() => import('./pages/AdminDashboard'))
 const Payment = lazy(() => import('./pages/Payment'))
 const StripePayment = lazy(() => import('./pages/StripePayment'))
 const OrderSuccess = lazy(() => import('./pages/OrderSuccess'))
+const MomoPayment = lazy(() => import('./pages/MomoPayment/MomoPayment'))
 
 /**
  * Để tối ưu re-render thì nên ưu tiên dùng <Outlet /> thay cho {children}
@@ -142,6 +143,16 @@ export default function useRouteElements() {
             <CartLayout>
               <Suspense>
                 <StripePayment />
+              </Suspense>
+            </CartLayout>
+          )
+        },
+        {
+          path: path.momoPayment,
+          element: (
+            <CartLayout>
+              <Suspense>
+                <MomoPayment />
               </Suspense>
             </CartLayout>
           )

@@ -18,7 +18,7 @@ export interface DeliveryAddress {
 
 export type OrderStatus = 'pending' | 'confirmed' | 'shipping' | 'delivered' | 'cancelled'
 export type PaymentStatus = 'pending' | 'paid' | 'failed'
-export type PaymentMethod = 'cod' | 'stripe'
+export type PaymentMethod = 'cod' | 'stripe' | 'momo'
 
 export interface Order {
   id: number
@@ -38,6 +38,9 @@ export interface Order {
     email: string
     phone?: string
   }
+  momo_transfer_note?: string | null
+  user_payment_confirmed?: 0 | 1
+  user_payment_confirmed_at?: string | null
 }
 
 export interface OrderTransaction {

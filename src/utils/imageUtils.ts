@@ -29,7 +29,7 @@ export const getImageUrl = (imagePath: string): string => {
  * @param product - The product object
  * @returns Main product image URL
  */
-export const getMainProductImage = (product: Pick<Product, 'image' | 'images'>): string => {
+export const getMainProductImage = (product: Product): string => {
   // First try the main image field
   if (product.image) {
     return getImageUrl(product.image)

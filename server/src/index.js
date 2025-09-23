@@ -11,6 +11,7 @@ const categoryRoutes = require('./routes/category');
 const cartRoutes = require('./routes/cart');
 const orderRoutes = require('./routes/order');
 const adminRoutes = require('./routes/admin');
+const bannerRoutes = require('./routes/banner');
 const setupRoutes = require('./routes/setup');
 
 const app = express();
@@ -58,6 +59,7 @@ app.use('/api/categories', categoryRoutes);
 app.use('/api/cart', cartRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/banners', bannerRoutes);
 app.use('/api/setup', setupRoutes);
 
 // Health check

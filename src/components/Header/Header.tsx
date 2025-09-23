@@ -23,10 +23,9 @@ import {
   useQueryClient
 } from '@tanstack/react-query'
 
-import Popover from '../Popover'
 
 export default function Header() {
-  const { i18n } = useTranslation()
+  const { t, i18n } = useTranslation('home')
   const currentLanguage = locales[i18n.language as keyof typeof locales]
   const { isAuthenticated, setIsAuthenticated, profile, setProfile } = useContext(AppContext)
   const navigate = useNavigate()
@@ -37,6 +36,7 @@ export default function Header() {
   const [showDropdown, setShowDropdown] = useState(false)
   const dropdownRef = useRef<HTMLLIElement>(null)
   const [dropdownPosition, setDropdownPosition] = useState({ top: 0, right: 0 })
+  const [showMobileMenu, setShowMobileMenu] = useState(false)
 
   const queryClient = useQueryClient()
 
@@ -115,6 +115,31 @@ export default function Header() {
     }
   }, [showDropdown])
 
+  // Close mobile menu on resize (when switching from mobile to desktop)
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth > 739) {
+        setShowMobileMenu(false)
+      }
+    }
+
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+
+  // Prevent body scroll when mobile menu is open
+  useEffect(() => {
+    if (showMobileMenu) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = 'unset'
+    }
+
+    return () => {
+      document.body.style.overflow = 'unset'
+    }
+  }, [showMobileMenu])
+
   const changeLanguage = (lng: 'en' | 'vi') => {
     i18n.changeLanguage(lng)
   }
@@ -125,16 +150,16 @@ export default function Header() {
         <nav className="header__navbar hide-on-mobile-tablet">
           <ul className="header__navbar-list">
             <li className="header__navbar-item header__navbar-item-separate">
-              Kênh người bán
+              {t('header.seller_channel')}
             </li>
             <a
               href="#"
               className="header__navbar-item header__navbar-item-separate"
             >
-              Trở thành người bán Shopee
+              {t('header.become_seller')}
             </a>
             <li className="header__navbar-item header__navbar-item--has-qr header__navbar-item-separate">
-              Tải ứng dụng
+              {t('header.download_app')}
               {/* start: QR code */}
               <div className="header__qr">
                 <img src="./assets/img/qr_code.png" alt="qr code" className="header__qr-img" />
@@ -168,7 +193,7 @@ export default function Header() {
               {/* end: QR code */}
             </li>
             <li className="header__navbar-item">
-              <span className="header__navbar-title--no-pointer">Kết nối</span>
+              <span className="header__navbar-title--no-pointer">{t('header.connect')}</span>
               <a
                 href="#"
                 target="_blank"
@@ -190,54 +215,76 @@ export default function Header() {
           <ul className="header__navbar-list">
             <li className="header__navbar-item header__navbar-item--has-notify">
               <a href="#" className="header__navbar-item-link">
-                <i className="header__navbar-icon fa-regular fa-bell" /> Thông báo
+                <i className="header__navbar-icon fa-regular fa-bell" /> {t('header.notifications')}
               </a>
               {/* start: Header Notification*/}
               <div className="header__notify">
                 <div className="header__notify-main">
                   <img src="./assets/img/notification.png" alt="Notification" className="header__notify-main-img" />
-                  <span className="header__notify-main-suggest">Đăng nhập để xem Thông báo</span>
+                  <span className="header__notify-main-suggest">{t('header.login_to_view_notifications')}</span>
                 </div>
                 <div className="header__notify-footer">
-                  <a href="#" className="header__notify-footer-item">Đăng ký</a>
-                  <a href="#" className="header__notify-footer-item">Đăng nhập</a>
+                  <a href="#" className="header__notify-footer-item">{t('header.register')}</a>
+                  <a href="#" className="header__notify-footer-item">{t('header.login')}</a>
                 </div>
               </div>
               {/* end: Header Notification*/}
             </li>
             <li className="header__navbar-item">
               <a href="#" className="header__navbar-item-link">
-                <i className="header__navbar-icon fa-regular fa-circle-question" /> Hỗ trợ
+                <i className="header__navbar-icon fa-regular fa-circle-question" /> {t('header.support')}
               </a>
             </li>
             <li className="header__navbar-item header__navbar-item--has-lang">
-              <Popover
-                className="flex cursor-pointer items-center"
-                renderPopover={
-                  <div className="relative rounded-sm border border-gray-200 bg-white shadow-md">
-                    <div className="flex flex-col py-2 pr-28 pl-3">
-                      <button className="py-2 px-3 text-left hover:text-orange" onClick={() => changeLanguage('vi')}>
-                        Tiếng Việt
-                      </button>
-                      <button className="mt-2 py-2 px-3 text-left hover:text-orange" onClick={() => changeLanguage('en')}>
-                        English
-                      </button>
-                    </div>
-                  </div>
-                }
-              >
+              <a href="#" className="header__navbar-item-link">
                 <i className="header__navbar-icon fa-solid fa-globe" />
                 <span className="header__navbar-title">{currentLanguage}</span>
                 <i className="header__navbar-icon fa-solid fa-angle-down" style={{ fontSize: 12 }} />
-              </Popover>
+              </a>
+              {/* start: Header Language */}
+              <div className="header__lang">
+                <button 
+                  className="header__lang-item" 
+                  onClick={() => changeLanguage('vi')}
+                  type="button"
+                  style={{ 
+                    background: 'none', 
+                    border: 'none', 
+                    cursor: 'pointer', 
+                    width: '100%', 
+                    textAlign: 'left',
+                    fontSize: 'inherit',
+                    color: 'inherit'
+                  }}
+                >
+                  Tiếng Việt
+                </button>
+                <button 
+                  className="header__lang-item" 
+                  onClick={() => changeLanguage('en')}
+                  type="button"
+                  style={{ 
+                    background: 'none', 
+                    border: 'none', 
+                    cursor: 'pointer', 
+                    width: '100%', 
+                    textAlign: 'left',
+                    fontSize: 'inherit',
+                    color: 'inherit'
+                  }}
+                >
+                  English
+                </button>
+              </div>
+              {/* end: Header Language */}
             </li>
             {!isAuthenticated && (
               <>
                 <li className="header__navbar-item header__navbar-item-separate">
-                  <Link to={path.register}>Đăng ký</Link>
+                  <Link to={path.register}>{t('header.register')}</Link>
                 </li>
                 <li className="header__navbar-item">
-                  <Link to={path.login}>Đăng nhập</Link>
+                  <Link to={path.login}>{t('header.login')}</Link>
                 </li>
               </>
             )}
@@ -269,14 +316,14 @@ export default function Header() {
                   className="block w-full bg-white py-3 px-4 text-left text-gray-800 hover:bg-slate-100 hover:text-cyan-500"
                   onClick={() => setShowDropdown(false)}
                 >
-                  Tài khoản của tôi
+                  {t('header.my_account')}
                 </Link>
                 <Link
                   to={path.historyPurchase}
                   className="block w-full bg-white py-3 px-4 text-left text-gray-800 hover:bg-slate-100 hover:text-cyan-500"
                   onClick={() => setShowDropdown(false)}
                 >
-                  Đơn mua
+                  {t('header.my_orders')}
                 </Link>
                 <button
                   onClick={(e) => {
@@ -286,7 +333,7 @@ export default function Header() {
                   }}
                   className="block w-full bg-white py-3 px-4 text-left text-gray-800 hover:bg-slate-100 hover:text-cyan-500"
                 >
-                  Đăng xuất
+                  {t('header.logout')}
                 </button>
               </div>,
               document.body
@@ -309,13 +356,13 @@ export default function Header() {
               </svg>
             </a>
           </div>
-          <div className="header__search-contain">
+          <div className="header__search-contain hide-on-mobile">
             <form className="header__search" onSubmit={onSubmitSearch}>
               <div className="header__search-input-wrap">
                 <input
                   type="text"
                   className="header__search-input"
-                  placeholder="Tìm kiếm sản phẩm..."
+                  placeholder={t('header.search_placeholder')}
                   autoComplete="off"
                   {...register('name')}
                 />
@@ -323,7 +370,7 @@ export default function Header() {
                 <div className="header__search-history">
                   <div className="header__search-history-heading">
                     <div className="header__search-history-text">
-                      Voucher lên đến 70k!
+                      {t('header.voucher_text')}
                     </div>
                     <img className="header__search-history-img" src="./assets/img/voucher.png" alt="voucher" />
                   </div>
@@ -369,7 +416,7 @@ export default function Header() {
             {/* start: header search suggest */}
             <div className="header__search-suggest hide-on-mobile-tablet">
               <div className="header__search-suggest-list">
-                {["Dép", "Váy", "Dép Nữ", "Ốp iPhone", "Áo Phông", "Balo", "Dép Nam", "Son"].map(item => (
+                {(t('search_suggestions', { returnObjects: true }) as string[]).map(item => (
                   <button 
                     key={item} 
                     type="button"
@@ -391,15 +438,112 @@ export default function Header() {
           </div>
           {/* end: header search suggest */}
 
-          {/* Mobile-only avatar */}
-          {isAuthenticated && (
-            <Link to={path.profile} className="only-mobile" aria-label="Profile" style={{ marginRight: 8 }}>
-              <img src={getAvatarUrl(profile?.avatar)} alt="avatar" style={{ width: 28, height: 28, borderRadius: '50%' }} />
-            </Link>
-          )}
+          {/* Mobile-only authentication and hamburger menu - positioned on the right */}
+          <div className="only-mobile" style={{ alignItems: 'center', gap: '8px' }}>            {isAuthenticated ? (
+              <Link to={path.profile} aria-label="Profile">
+                <img src={getAvatarUrl(profile?.avatar)} alt="avatar" style={{ width: 28, height: 28, borderRadius: '50%' }} />
+              </Link>
+            ) : (
+              <>
+                <Link 
+                  to={path.login} 
+                  style={{ 
+                    color: 'white', 
+                    textDecoration: 'none', 
+                    fontSize: '13px',
+                    padding: '6px 10px',
+                    border: '1px solid white',
+                    borderRadius: '4px',
+                    transition: 'all 0.2s ease',
+                    whiteSpace: 'nowrap'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = 'white'
+                    e.currentTarget.style.color = '#ee4d2d'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = 'transparent'
+                    e.currentTarget.style.color = 'white'
+                  }}
+                >
+                  {t('auth.login')}
+                </Link>
+                <Link 
+                  to={path.register} 
+                  style={{ 
+                    color: '#ee4d2d', 
+                    backgroundColor: 'white', 
+                    textDecoration: 'none', 
+                    fontSize: '13px',
+                    padding: '6px 10px',
+                    borderRadius: '4px',
+                    transition: 'all 0.2s ease',
+                    whiteSpace: 'nowrap',
+                    fontWeight: '500'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = '#f5f5f5'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = 'white'
+                  }}
+                >
+                  {t('auth.register')}
+                </Link>
+              </>
+            )}
+            
+            {/* Cart icon - part of the right group */}
+            <div className="header__cart" style={{ position: 'relative' }}>
+              <div className="header__cart-wrap" onClick={handleCartClick} style={{ cursor: 'pointer' }}>
+                <i className="header__cart-icon fa-solid fa-cart-shopping" style={{ color: 'white', fontSize: '18px' }} />
+                {cartCount > 0 && (
+                  <span 
+                    className="header__cart-notice" 
+                    style={{
+                      position: 'absolute',
+                      top: '-8px',
+                      right: '-8px',
+                      backgroundColor: '#ee4d2d',
+                      color: 'white',
+                      borderRadius: '50%',
+                      width: '18px',
+                      height: '18px',
+                      fontSize: '11px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontWeight: 'bold'
+                    }}
+                  >
+                    {cartCount}
+                  </span>
+                )}
+              </div>
+            </div>
+            
+            {/* Mobile hamburger menu - at the far right */}
+            <button 
+              onClick={() => setShowMobileMenu(!showMobileMenu)}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: 'white',
+                fontSize: '20px',
+                cursor: 'pointer',
+                padding: '8px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+              aria-label="Menu"
+            >
+              <i className={`fa-solid ${showMobileMenu ? 'fa-times' : 'fa-bars'}`}></i>
+            </button>
+          </div>
 
-          {/* start: header cart */}
-          <div className="header__cart">
+          {/* start: header cart - desktop only */}
+          <div className="header__cart hide-on-mobile">
             <div className="header__cart-wrap" onClick={handleCartClick}>
               <i className="header__cart-icon fa-solid fa-cart-shopping" />
               {cartCount > 0 && <span className="header__cart-notice">{cartCount}</span>}
@@ -409,11 +553,11 @@ export default function Header() {
                     <div>
                       <img src="./assets/img/no_cart.png" alt="No Cart" className="header__cart-list-no-cart-img" />
                     </div>
-                    <span className="header__cart-list-no-cart-msg">Chưa có sản phẩm</span>
+                    <span className="header__cart-list-no-cart-msg">{t('header.no_products')}</span>
                   </div>
                 ) : (
                   <div className="header__cart-list--has-cart">
-                    <h4 className="header__cart-heading">Sản phẩm mới thêm</h4>
+                    <h4 className="header__cart-heading">{t('header.new_products')}</h4>
                     <ul className="header__cart-list-item">
                       {cartItems.slice(0, 3).map((item) => (
                         <li key={item.id} className="header__cart-item">
@@ -427,7 +571,7 @@ export default function Header() {
                     </ul>
                     <div className="header__cart-view-cart">
                       <Link to={path.cart} className="header__cart-view-cart-btn btn btn--primary">
-                        Xem giỏ hàng
+                        {t('header.view_cart')}
                       </Link>
                     </div>
                   </div>
@@ -439,6 +583,177 @@ export default function Header() {
         </div>
         {/* end: header with search */}
       </div>
+
+      {/* Mobile Menu Overlay */}
+      {showMobileMenu && (
+        <div 
+          className="only-mobile"
+          style={{
+            position: 'fixed',
+            top: 'var(--header-height)',
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            zIndex: 999999,
+            display: 'flex',
+            justifyContent: 'flex-end'
+          }}
+          onClick={() => setShowMobileMenu(false)}
+        >
+          <div 
+            style={{
+              backgroundColor: 'white',
+              width: '280px',
+              height: '100%',
+              padding: '20px',
+              boxShadow: '-2px 0 10px rgba(0,0,0,0.1)',
+              overflowY: 'auto'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Mobile Navigation Menu */}
+            <div style={{ marginBottom: '20px' }}>
+              <h3 style={{ margin: '0 0 15px 0', color: '#333', fontSize: '16px', fontWeight: 'bold' }}>
+                {t('header.seller_channel')}
+              </h3>
+              <div style={{ paddingLeft: '10px' }}>
+                <a href="#" style={{ display: 'block', padding: '8px 0', color: '#666', textDecoration: 'none', fontSize: '14px' }}>
+                  {t('header.become_seller')}
+                </a>
+                <a href="#" style={{ display: 'block', padding: '8px 0', color: '#666', textDecoration: 'none', fontSize: '14px' }}>
+                  {t('header.download_app')}
+                </a>
+              </div>
+            </div>
+
+            <div style={{ borderTop: '1px solid #eee', paddingTop: '20px', marginBottom: '20px' }}>
+              <h3 style={{ margin: '0 0 15px 0', color: '#333', fontSize: '16px', fontWeight: 'bold' }}>
+                {t('header.connect')}
+              </h3>
+              <div style={{ paddingLeft: '10px' }}>
+                <a href="#" style={{ display: 'block', padding: '8px 0', color: '#666', textDecoration: 'none', fontSize: '14px' }}>
+                  <i className="fa-brands fa-facebook" style={{ marginRight: '8px', color: '#1877f2' }}></i>
+                  Facebook
+                </a>
+                <a href="#" style={{ display: 'block', padding: '8px 0', color: '#666', textDecoration: 'none', fontSize: '14px' }}>
+                  <i className="fa-brands fa-instagram" style={{ marginRight: '8px', color: '#e4405f' }}></i>
+                  Instagram
+                </a>
+              </div>
+            </div>
+
+            <div style={{ borderTop: '1px solid #eee', paddingTop: '20px', marginBottom: '20px' }}>
+              <h3 style={{ margin: '0 0 15px 0', color: '#333', fontSize: '16px', fontWeight: 'bold' }}>
+                {t('header.notifications')}
+              </h3>
+              <div style={{ paddingLeft: '10px' }}>
+                <a href="#" style={{ display: 'block', padding: '8px 0', color: '#666', textDecoration: 'none', fontSize: '14px' }}>
+                  {t('header.login_to_view_notifications')}
+                </a>
+              </div>
+            </div>
+
+            <div style={{ borderTop: '1px solid #eee', paddingTop: '20px', marginBottom: '20px' }}>
+              <h3 style={{ margin: '0 0 15px 0', color: '#333', fontSize: '16px', fontWeight: 'bold' }}>
+                {t('header.support')}
+              </h3>
+            </div>
+
+            {/* Language Switcher */}
+            <div style={{ borderTop: '1px solid #eee', paddingTop: '20px' }}>
+              <h3 style={{ margin: '0 0 15px 0', color: '#333', fontSize: '16px', fontWeight: 'bold' }}>
+                <i className="fa-solid fa-globe" style={{ marginRight: '8px' }}></i>
+                {currentLanguage}
+              </h3>
+              <div style={{ paddingLeft: '10px' }}>
+                <button 
+                  onClick={() => {
+                    changeLanguage('vi')
+                    setShowMobileMenu(false)
+                  }}
+                  style={{
+                    display: 'block',
+                    width: '100%',
+                    textAlign: 'left',
+                    padding: '8px 0',
+                    background: 'none',
+                    border: 'none',
+                    color: i18n.language === 'vi' ? '#ee4d2d' : '#666',
+                    fontSize: '14px',
+                    cursor: 'pointer',
+                    fontWeight: i18n.language === 'vi' ? 'bold' : 'normal'
+                  }}
+                >
+                  Tiếng Việt
+                </button>
+                <button 
+                  onClick={() => {
+                    changeLanguage('en')
+                    setShowMobileMenu(false)
+                  }}
+                  style={{
+                    display: 'block',
+                    width: '100%',
+                    textAlign: 'left',
+                    padding: '8px 0',
+                    background: 'none',
+                    border: 'none',
+                    color: i18n.language === 'en' ? '#ee4d2d' : '#666',
+                    fontSize: '14px',
+                    cursor: 'pointer',
+                    fontWeight: i18n.language === 'en' ? 'bold' : 'normal'
+                  }}
+                >
+                  English
+                </button>
+              </div>
+            </div>
+
+            {/* Authentication Section */}
+            {!isAuthenticated && (
+              <div style={{ borderTop: '1px solid #eee', paddingTop: '20px', marginTop: '20px' }}>
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  <Link 
+                    to={path.login}
+                    onClick={() => setShowMobileMenu(false)}
+                    style={{
+                      flex: 1,
+                      padding: '12px',
+                      textAlign: 'center',
+                      border: '1px solid #ee4d2d',
+                      borderRadius: '4px',
+                      color: '#ee4d2d',
+                      textDecoration: 'none',
+                      fontSize: '14px',
+                      fontWeight: '500'
+                    }}
+                  >
+                    {t('auth.login')}
+                  </Link>
+                  <Link 
+                    to={path.register}
+                    onClick={() => setShowMobileMenu(false)}
+                    style={{
+                      flex: 1,
+                      padding: '12px',
+                      textAlign: 'center',
+                      backgroundColor: '#ee4d2d',
+                      borderRadius: '4px',
+                      color: 'white',
+                      textDecoration: 'none',
+                      fontSize: '14px',
+                      fontWeight: '500'
+                    }}
+                  >
+                    {t('auth.register')}
+                  </Link>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </header>
   );
 }

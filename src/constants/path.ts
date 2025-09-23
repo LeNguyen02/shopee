@@ -13,6 +13,7 @@ const path = {
   cart: '/cart',
   payment: '/payment',
   stripePayment: '/stripe-payment',
+  momoPayment: '/momo-payment',
   orderSuccess: '/order-success',
   admin: '/admin',
   adminDashboard: '/admin/dashboard',

@@ -1,3 +1,6 @@
+/* Default hidden utility for mobile-only elements */
+.only-mobile { display: none; }
+
 /* mobile & tablet */
 @media (max-width: 1023px) {
   :root {
@@ -67,6 +70,12 @@
     display: none;
   }
 
+  /* Mobile header layout - space between logo and auth buttons */
+  .header__with-search {
+    justify-content: space-between;
+    margin: 0 12px;
+  }
+
   /* Header cart list full-width on mobile */
   .header__cart-list {
     position: fixed;
@@ -102,5 +111,3 @@
   .only-mobile { display: inline-flex; }
 }
 
-/* Default hidden utility for mobile-only elements */
-.only-mobile { display: none; }

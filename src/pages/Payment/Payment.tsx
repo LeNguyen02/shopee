@@ -28,6 +28,11 @@ const paymentMethods: PaymentMethod[] = [
     type: 'stripe',
     name: 'Thanh toán bằng thẻ (Stripe)',
     description: 'Thanh toán an toàn bằng thẻ tín dụng/ghi nợ'
+  },
+  {
+    type: 'momo',
+    name: 'Chuyển khoản MoMo',
+    description: 'Chuyển khoản qua MoMo theo hướng dẫn của shop'
   }
 ]
 
@@ -62,7 +67,7 @@ export default function Payment() {
   } = useAddressSelection()
 
   const [message, setMessage] = useState('')
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<'cod' | 'stripe'>('cod')
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<'cod' | 'stripe' | 'momo'>('cod')
   const [errors, setErrors] = useState<Partial<DeliveryAddress>>({})
 
   const createOrderMutation = useMutation({
@@ -77,6 +82,9 @@ export default function Payment() {
             paymentIntent: response.data.data.stripe_payment_intent 
           } 
         })
+      } else if (selectedPaymentMethod === 'momo') {
+        // Redirect to MoMo payment instruction page
+        navigate(path.momoPayment, { state: { order } })
       } else {
         // Redirect to order success page
         navigate(path.orderSuccess, { state: { order } })

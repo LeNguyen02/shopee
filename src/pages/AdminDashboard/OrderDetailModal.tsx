@@ -213,9 +213,24 @@ export default function OrderDetailModal({ order, isOpen, onClose }: OrderDetail
                     <div>
                       <span className="font-medium">Phương thức thanh toán:</span> 
                       <span className="ml-1">
-                        {orderDetail?.payment_method === 'cod' ? 'Thanh toán khi nhận hàng' : 'Thanh toán online'}
+                        {orderDetail?.payment_method === 'cod' ? 'Thanh toán khi nhận hàng' : orderDetail?.payment_method === 'stripe' ? 'Thanh toán online (Stripe)' : 'Chuyển khoản MoMo'}
                       </span>
                     </div>
+                    {orderDetail?.payment_method === 'momo' && (
+                      <>
+                        <div>
+                          <span className="font-medium">Mã ghi chú (MoMo):</span>
+                          <span className="ml-1 select-all">{orderDetail?.momo_transfer_note || '—'}</span>
+                        </div>
+                        <div>
+                          <span className="font-medium">Người dùng đã xác nhận:</span>
+                          <span className="ml-1">{orderDetail?.user_payment_confirmed ? 'Có' : 'Chưa'}</span>
+                          {orderDetail?.user_payment_confirmed_at && (
+                            <span className="ml-2 text-gray-500">({formatDate(orderDetail.user_payment_confirmed_at)})</span>
+                          )}
+                        </div>
+                      </>
+                    )}
                     <div>
                       <span className="font-medium">Ngày tạo:</span> {formatDate(orderDetail?.created_at || '')}
                     </div>

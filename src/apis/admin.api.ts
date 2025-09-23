@@ -75,6 +75,7 @@ const adminApi = {
     status?: string
     payment_status?: string
     search?: string
+    user_payment_confirmed?: 0 | 1 | ''
   }) {
     return httpAdmin.get<SuccessResponse<OrderList>>(`${URL}/orders`, {
       params
@@ -87,6 +88,19 @@ const adminApi = {
 
   updateOrderStatus(id: string, body: UpdateOrderStatusRequest) {
     return httpAdmin.put<SuccessResponse<Order>>(`${URL}/orders/${id}/status`, body)
+  },
+
+  // MoMo settings
+  getMomoSettings() {
+    return httpAdmin.get<SuccessResponse<{ settings: { name: string; account_number: string; qr_image_url: string; instructions: string } }>>(
+      `${URL}/settings/momo`
+    )
+  },
+  updateMomoSettings(settings: { name: string; account_number: string; qr_image_url: string; instructions: string }) {
+    return httpAdmin.put<SuccessResponse<{ settings: { name: string; account_number: string; qr_image_url: string; instructions: string } }>>(
+      `${URL}/settings/momo`,
+      settings
+    )
   },
 
   // Image upload

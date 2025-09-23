@@ -27,6 +27,18 @@ const paymentApi = {
     })
   },
 
+  // MoMo: get settings
+  getMomoSettings() {
+    return http.get<SuccessResponse<{ settings: { name: string; account_number: string; qr_image_url: string; instructions: string } }>>(
+      `${URL}/momo-settings`
+    )
+  },
+
+  // MoMo: user confirm transfer
+  confirmMomoTransfer(orderId: string, transfer_note: string) {
+    return http.post<SuccessResponse<OrderResponse>>(`${URL}/${orderId}/momo-confirm`, { transfer_note })
+  },
+
   // Cancel order
   cancelOrder(orderId: string) {
     return http.put<SuccessResponse<OrderResponse>>(`${URL}/${orderId}/cancel`)
