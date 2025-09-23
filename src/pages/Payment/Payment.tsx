@@ -24,11 +24,11 @@ const paymentMethods: PaymentMethod[] = [
     name: 'Thanh toán khi nhận hàng (COD)',
     description: 'Bạn sẽ thanh toán bằng tiền mặt khi nhận được hàng'
   },
-  {
-    type: 'stripe',
-    name: 'Thanh toán bằng thẻ (Stripe)',
-    description: 'Thanh toán an toàn bằng thẻ tín dụng/ghi nợ'
-  },
+  // {
+  //   type: 'stripe',
+  //   name: 'Thanh toán bằng thẻ (Stripe)',
+  //   description: 'Thanh toán an toàn bằng thẻ tín dụng/ghi nợ'
+  // },
   {
     type: 'momo',
     name: 'Chuyển khoản MoMo',
