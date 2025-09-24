@@ -5,6 +5,20 @@ import { FlashSale, Product } from 'src/types/product.type'
 import Button from 'src/components/Button'
 import { toast } from 'react-toastify'
 
+// Helper: convert 'YYYY-MM-DDTHH:mm' (local) -> 'YYYY-MM-DD HH:mm:00'
+function toMySqlDateTime(localDatetimeValue: string) {
+  if (!localDatetimeValue) return ''
+  // Ensure seconds component exists and replace the 'T' separator
+  const withSeconds = localDatetimeValue.length === 16 ? `${localDatetimeValue}:00` : localDatetimeValue
+  return withSeconds.replace('T', ' ')
+}
+
+// Helper: convert DB 'YYYY-MM-DD HH:mm:ss' -> 'YYYY-MM-DDTHH:mm' for <input type="datetime-local">
+function toInputDateTime(mysqlDatetimeValue: string) {
+  if (!mysqlDatetimeValue) return ''
+  return mysqlDatetimeValue.replace(' ', 'T').slice(0, 16)
+}
+
 export default function FlashSaleManagement() {
   const [search, setSearch] = useState('')
   const [status, setStatus] = useState('')
@@ -29,7 +43,15 @@ export default function FlashSaleManagement() {
   // Create form state
   const [createForm, setCreateForm] = useState({ name: '', start_time: '', end_time: '', is_active: 1 as 0 | 1 })
   const createMutation = useMutation({
-    mutationFn: () => adminApi.createFlashSale(createForm),
+    mutationFn: () => {
+      const payload = {
+        name: createForm.name,
+        start_time: toMySqlDateTime(createForm.start_time),
+        end_time: toMySqlDateTime(createForm.end_time),
+        is_active: createForm.is_active
+      }
+      return adminApi.createFlashSale(payload)
+    },
     onSuccess: (res) => {
       toast.success('Tạo flash sale thành công')
       setIsCreateOpen(false)
@@ -42,7 +64,15 @@ export default function FlashSaleManagement() {
   // Update form state
   const [editForm, setEditForm] = useState({ name: '', start_time: '', end_time: '', is_active: 1 as 0 | 1 })
   const updateMutation = useMutation({
-    mutationFn: () => adminApi.updateFlashSale(editing!.id, editForm),
+    mutationFn: () => {
+      const payload = {
+        name: editForm.name,
+        start_time: toMySqlDateTime(editForm.start_time),
+        end_time: toMySqlDateTime(editForm.end_time),
+        is_active: editForm.is_active
+      }
+      return adminApi.updateFlashSale(editing!.id, payload)
+    },
     onSuccess: () => {
       toast.success('Cập nhật flash sale thành công')
       setIsEditOpen(false)
@@ -89,7 +119,7 @@ export default function FlashSaleManagement() {
 
   const handleOpenEdit = (sale: FlashSale) => {
     setEditing(sale)
-    setEditForm({ name: sale.name, start_time: sale.start_time.slice(0, 16), end_time: sale.end_time.slice(0, 16), is_active: sale.is_active })
+    setEditForm({ name: sale.name, start_time: toInputDateTime(sale.start_time), end_time: toInputDateTime(sale.end_time), is_active: sale.is_active })
     setIsEditOpen(true)
   }
 
