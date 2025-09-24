@@ -13,7 +13,12 @@ const dbConfig = {
 
 // Create connection pool
 const pool = mysql.createPool(dbConfig);
-
+if (typeof pool.on === 'function') {
+  pool.on('connection', (connection) => {
+    // Set session time zone for this connection
+    connection.query("SET time_zone = '+07:00'");
+  });
+}
 // Test database connection
 const testConnection = async () => {
   try {
