@@ -44,6 +44,14 @@ class FlashSale {
     return this.findByIdWithItems(flash_sale_id)
   }
 
+  static async removeItem(flash_sale_id, product_id) {
+    await pool.execute(
+      `DELETE FROM flash_sale_items WHERE flash_sale_id = ? AND product_id = ?`,
+      [flash_sale_id, product_id]
+    )
+    return this.findByIdWithItems(flash_sale_id)
+  }
+
   static async findById(id) {
     const [rows] = await pool.execute(`SELECT * FROM flash_sales WHERE id = ?`, [id])
     return rows[0] || null

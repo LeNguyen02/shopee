@@ -84,6 +84,7 @@ export default function FlashSaleManagement() {
 
   // Items management state
   const [items, setItems] = useState<Array<{ product_id: number; sale_price: number; item_limit?: number | null; discount_percent?: number; product_price?: number }>>([])
+  const [openPicker, setOpenPicker] = useState<number | null>(null)
 
   // Product search for dropdown
   const [productSearch, setProductSearch] = useState('')
@@ -333,33 +334,68 @@ export default function FlashSaleManagement() {
                   <span className="text-sm text-gray-500">{productOptions.length} sản phẩm</span>
                 </div>
               </div>
-              {items.map((it, idx) => (
-                <div key={idx} className="grid grid-cols-1 md:grid-cols-7 gap-3 items-center">
-                  <select
-                    className="border p-2 rounded md:col-span-3"
-                    value={it.product_id || 0}
-                    onChange={e => {
-                      const pid = Number(e.target.value)
-                      const p = productOptions.find(pp => pp.id === pid)
-                      setItems(prev => prev.map((x, i) => {
-                        if (i !== idx) return x
-                        const base = p ? p.price : undefined
-                        let sale = x.sale_price
-                        if (x.discount_percent !== undefined && base && base > 0) {
-                          const pct = Math.min(100, Math.max(0, Number(x.discount_percent)))
-                          sale = Math.max(0, Math.round((base * (100 - pct)) / 100))
-                        }
-                        return { ...x, product_id: pid, product_price: base, sale_price: sale }
-                      }))
-                    }}
-                  >
-                    <option value={0}>Chọn sản phẩm...</option>
-                    {productOptions.map(p => (
-                      <option key={p.id} value={p.id}>{p.name} • {p.price.toLocaleString()}đ</option>
-                    ))}
-                  </select>
+              {items.map((it, idx) => {
+                const selected = productOptions.find(p => p.id === it.product_id)
+                return (
+                  <div key={idx} className="grid grid-cols-1 md:grid-cols-7 gap-3 items-center">
+                    {/* Product picker with image + name */}
+                    <div className="md:col-span-3 relative">
+                      <button
+                        type="button"
+                        className="w-full border p-2 rounded flex items-center justify-between hover:border-gray-400"
+                        onClick={() => setOpenPicker(prev => (prev === idx ? null : idx))}
+                      >
+                        <div className="flex items-center gap-2 overflow-hidden">
+                          {selected?.image ? (
+                            <img src={selected.image} alt={selected.name} className="w-8 h-8 object-cover rounded border" />
+                          ) : (
+                            <div className="w-8 h-8 rounded bg-gray-100 border flex items-center justify-center text-gray-400">
+                              <i className="fas fa-image"></i>
+                            </div>
+                          )}
+                          <span className="text-sm text-gray-800 truncate">
+                            {selected ? selected.name : (it.product_id ? `Sản phẩm #${it.product_id}` : 'Chọn sản phẩm...')}
+                          </span>
+                        </div>
+                        <i className={`fas fa-chevron-${openPicker === idx ? 'up' : 'down'} text-gray-500 ml-2`}></i>
+                      </button>
+                      {openPicker === idx && (
+                        <div className="absolute z-10 mt-1 w-full bg-white border rounded shadow-lg max-h-72 overflow-auto">
+                          {productOptions.length === 0 && (
+                            <div className="p-3 text-sm text-gray-500">Không có sản phẩm phù hợp</div>
+                          )}
+                          {productOptions.map(p => (
+                            <button
+                              type="button"
+                              key={p.id}
+                              className="w-full text-left px-3 py-2 hover:bg-gray-50 flex items-center gap-3"
+                              onClick={() => {
+                                const pid = p.id
+                                setItems(prev => prev.map((x, i) => {
+                                  if (i !== idx) return x
+                                  const base = p.price
+                                  let sale = x.sale_price
+                                  if (x.discount_percent !== undefined && base && base > 0) {
+                                    const pct = Math.min(100, Math.max(0, Number(x.discount_percent)))
+                                    sale = Math.max(0, Math.round((base * (100 - pct)) / 100))
+                                  }
+                                  return { ...x, product_id: pid, product_price: base, sale_price: sale }
+                                }))
+                                setOpenPicker(null)
+                              }}
+                            >
+                              <img src={p.image} alt={p.name} className="w-8 h-8 object-cover rounded border" />
+                              <div className="flex-1 min-w-0">
+                                <div className="text-sm text-gray-900 truncate">{p.name}</div>
+                                <div className="text-xs text-gray-500">{p.price.toLocaleString()}đ</div>
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
 
-                  <input
+                    <input
                     className="border p-2 rounded md:col-span-1"
                     type="number"
                     placeholder="% giảm"
@@ -376,27 +412,32 @@ export default function FlashSaleManagement() {
                         return { ...x, discount_percent: val, sale_price: sale }
                       }))
                     }}
-                  />
+                    />
 
-                  <input
+                    <input
                     className="border p-2 rounded md:col-span-1"
                     type="number"
                     placeholder="Giá sale"
                     value={it.sale_price}
                     onChange={e => setItems(prev => prev.map((x, i) => i === idx ? { ...x, sale_price: Number(e.target.value) } : x))}
-                  />
+                    />
 
-                  <input
+                    <input
                     className="border p-2 rounded md:col-span-1"
                     type="number"
                     placeholder="Giới hạn (tuỳ chọn)"
                     value={it.item_limit ?? ''}
                     onChange={e => setItems(prev => prev.map((x, i) => i === idx ? { ...x, item_limit: e.target.value === '' ? null : Number(e.target.value) } : x))}
-                  />
+                    />
 
-                  <button onClick={() => setItems(prev => prev.filter((_, i) => i !== idx))} className="bg-red-500 text-white px-3 py-2 rounded">Xóa</button>
-                </div>
-              ))}
+                    <button onClick={() => setItems(prev => prev.filter((_, i) => i !== idx))} className="bg-red-500 text-white px-3 py-2 rounded">Xóa</button>
+                  </div>
+                )
+              })}
+              {/* Existing items list for quick view and delete */}
+              {currentSaleId && editing == null && (
+                <ExistingItems saleId={currentSaleId} onDeleted={() => { /* no-op, modal state already detached */ }} />
+              )}
               <div className="flex justify-end">
                 <button onClick={() => addItemsMutation.mutate()} disabled={addItemsMutation.isPending} className="bg-green-600 text-white px-4 py-2 rounded">{addItemsMutation.isPending ? 'Đang lưu...' : 'Lưu sản phẩm'}</button>
               </div>
@@ -408,4 +449,41 @@ export default function FlashSaleManagement() {
   )
 }
 
+
+function ExistingItems({ saleId, onDeleted }: { saleId: number; onDeleted?: () => void }) {
+  const { data, refetch } = useQuery({
+    queryKey: ['admin-flash-sale-detail', saleId],
+    queryFn: () => adminApi.getFlashSaleDetail(saleId)
+  })
+  const sale: FlashSale | undefined = data?.data.data
+  const deleteMutation = useMutation({
+    mutationFn: (productId: number) => adminApi.deleteFlashSaleItem(saleId, productId),
+    onSuccess: () => {
+      toast.success('Đã xóa sản phẩm khỏi flash sale')
+      refetch()
+      onDeleted && onDeleted()
+    },
+    onError: (e: any) => toast.error(e?.response?.data?.message || 'Lỗi xóa sản phẩm')
+  })
+
+  if (!sale) return null
+
+  return (
+    <div className="mt-6 border-t pt-4">
+      <h4 className="font-semibold text-gray-800 mb-3">Sản phẩm hiện có</h4>
+      <div className="max-h-72 overflow-auto divide-y">
+        {(sale.items || []).map(item => (
+          <div key={item.id} className="py-2 flex items-center gap-3">
+            <img src={item.product_image || ''} alt={item.product_name || ''} className="w-10 h-10 object-cover rounded border" />
+            <div className="flex-1">
+              <div className="text-sm text-gray-900">{item.product_name}</div>
+              <div className="text-xs text-gray-500">Giá sale: {Number(item.sale_price).toLocaleString()}đ {item.item_limit ? `• Giới hạn: ${item.item_limit}` : ''}</div>
+            </div>
+            <button onClick={() => deleteMutation.mutate(item.product_id)} className="text-red-600 hover:text-red-700 text-sm px-3 py-1 border border-red-200 rounded">Xóa</button>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
 

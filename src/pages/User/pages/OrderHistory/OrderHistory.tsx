@@ -140,12 +140,16 @@ function OrderDetailModal({
               </div>
               <div>
                 <h4 className="text-lg font-medium text-gray-700 mb-2">Ngày đặt hàng</h4>
-                <p className="text-lg">{new Date(order.created_at).toLocaleDateString('vi-VN')}</p>
+                <p className="text-lg">{new Date(order.created_at).toLocaleDateString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })}</p>
               </div>
               <div>
                 <h4 className="text-lg font-medium text-gray-700 mb-2">Phương thức thanh toán</h4>
                 <p className="text-lg capitalize">
-                  {order.payment_method === 'cod' ? 'Thanh toán khi nhận hàng (COD)' : 'Thanh toán bằng thẻ (Stripe)'}
+                  {order.payment_method === 'cod'
+                    ? 'Thanh toán khi nhận hàng (COD)'
+                    : order.payment_method === 'momo'
+                      ? 'Chuyển khoản MoMo'
+                      : 'Thanh toán bằng thẻ (Stripe)'}
                 </p>
               </div>
               <div>

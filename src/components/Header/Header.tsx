@@ -214,9 +214,9 @@ export default function Header() {
           </ul>
           <ul className="header__navbar-list">
             <li className="header__navbar-item header__navbar-item--has-notify">
-              <a href="#" className="header__navbar-item-link">
+              {/* <a href="#" className="header__navbar-item-link">
                 <i className="header__navbar-icon fa-regular fa-bell" /> {t('header.notifications')}
-              </a>
+              </a> */}
               {/* start: Header Notification*/}
               <div className="header__notify">
                 <div className="header__notify-main">
@@ -319,7 +319,7 @@ export default function Header() {
                   {t('header.my_account')}
                 </Link>
                 <Link
-                  to={path.historyPurchase}
+                  to={path.orderHistory}
                   className="block w-full bg-white py-3 px-4 text-left text-gray-800 hover:bg-slate-100 hover:text-cyan-500"
                   onClick={() => setShowDropdown(false)}
                 >

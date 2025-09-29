@@ -165,6 +165,10 @@ const adminApi = {
     return httpAdmin.post<SuccessResponse<FlashSale>>(`${URL}/flash-sales/${id}/items`, { items })
   },
 
+  deleteFlashSaleItem(id: number, productId: number) {
+    return httpAdmin.delete<SuccessResponse<FlashSale>>(`${URL}/flash-sales/${id}/items/${productId}`)
+  },
+
   getFlashSales(params: { page?: number; limit?: number; search?: string; status?: string }) {
     return httpAdmin.get<SuccessResponse<{ flash_sales: FlashSale[]; pagination: { page: number; limit: number; total: number; page_size: number } }>>(
       `${URL}/flash-sales`,
