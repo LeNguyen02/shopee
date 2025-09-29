@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import { useMutation } from '@tanstack/react-query'
@@ -21,8 +22,8 @@ interface PaymentPageState {
 const paymentMethods: PaymentMethod[] = [
   {
     type: 'cod',
-    name: 'Thanh toán khi nhận hàng (COD)',
-    description: 'Bạn sẽ thanh toán bằng tiền mặt khi nhận được hàng'
+    name: 'payment:payment.cod_name',
+    description: 'payment:payment.cod_desc'
   },
   // {
   //   type: 'stripe',
@@ -31,12 +32,13 @@ const paymentMethods: PaymentMethod[] = [
   // },
   {
     type: 'momo',
-    name: 'Chuyển khoản MoMo',
-    description: 'Chuyển khoản qua MoMo theo hướng dẫn của shop'
+    name: 'payment:payment.momo_name',
+    description: 'payment:payment.momo_desc'
   }
 ]
 
 export default function Payment() {
+  const { t } = useTranslation('payment')
   const navigate = useNavigate()
   const location = useLocation()
   const state = location.state as PaymentPageState
@@ -91,7 +93,7 @@ export default function Payment() {
       }
     },
     onError: (error: any) => {
-      const message = error.response?.data?.message || 'Có lỗi xảy ra khi tạo đơn hàng'
+      const message = error.response?.data?.message || t('payment.errors.create_order')
       toast.error(message)
       
       // If it's an inventory issue, redirect to cart
@@ -107,24 +109,24 @@ export default function Payment() {
     const newErrors: Partial<DeliveryAddress> = {}
     
     if (!deliveryAddress.fullName.trim()) {
-      newErrors.fullName = 'Họ tên là bắt buộc'
+      newErrors.fullName = t('payment.form_errors.fullName')
     }
     if (!deliveryAddress.phone.trim()) {
-      newErrors.phone = 'Số điện thoại là bắt buộc'
+      newErrors.phone = t('payment.form_errors.phone_required')
     } else if (!/^[0-9]{10,11}$/.test(deliveryAddress.phone)) {
-      newErrors.phone = 'Số điện thoại không hợp lệ'
+      newErrors.phone = t('payment.form_errors.phone_invalid')
     }
     if (!deliveryAddress.address.trim()) {
-      newErrors.address = 'Địa chỉ là bắt buộc'
+      newErrors.address = t('payment.form_errors.address')
     }
     if (!selectedProvince) {
-      newErrors.city = 'Tỉnh/Thành phố là bắt buộc'
+      newErrors.city = t('payment.form_errors.city')
     }
     if (!selectedDistrict) {
-      newErrors.district = 'Quận/Huyện là bắt buộc'
+      newErrors.district = t('payment.form_errors.district')
     }
     if (!selectedWard) {
-      newErrors.ward = 'Phường/Xã là bắt buộc'
+      newErrors.ward = t('payment.form_errors.ward')
     }
 
     setErrors(newErrors)
@@ -137,7 +139,7 @@ export default function Payment() {
     }
 
     if (!state?.selectedItems || state.selectedItems.length === 0) {
-      toast.error('Không có sản phẩm nào được chọn')
+      toast.error(t('payment.form_errors.no_selected_items'))
       return
     }
 
@@ -176,12 +178,12 @@ export default function Payment() {
       <div className='bg-neutral-100 py-16'>
         <div className='container'>
           <div className='text-center'>
-            <h1 className='text-4xl font-bold text-gray-800 mb-6'>Không có sản phẩm để thanh toán</h1>
+            <h1 className='text-4xl font-bold text-gray-800 mb-6'>{t('payment.no_items')}</h1>
             <Button
               className='bg-orange text-white px-8 py-4 rounded text-xl'
               onClick={() => navigate(path.cart)}
             >
-              Quay lại giỏ hàng
+              {t('payment.back_to_cart')}
             </Button>
           </div>
         </div>
@@ -196,12 +198,12 @@ export default function Payment() {
           {/* Delivery Address */}
           <div className='lg:col-span-2'>
             <div className='bg-white rounded-lg shadow p-6 mb-6'>
-              <h2 className='text-3xl font-bold mb-6'>Thông tin giao hàng</h2>
+              <h2 className='text-3xl font-bold mb-6'>{t('payment.shipping_info')}</h2>
               <div className='grid text-xl grid-cols-1 md:grid-cols-2 gap-4'>
                 <div>
                   <Input
                     name='fullName'
-                    placeholder='Họ và tên *'
+                    placeholder={t('payment.full_name')}
                     value={deliveryAddress.fullName}
                     onChange={(e) => setDeliveryAddress(prev => ({ ...prev, fullName: e.target.value }))}
                     errorMessage={errors.fullName}
@@ -210,7 +212,7 @@ export default function Payment() {
                 <div>
                   <Input
                     name='phone'
-                    placeholder='Số điện thoại *'
+                    placeholder={t('payment.phone')}
                     value={deliveryAddress.phone}
                     onChange={(e) => setDeliveryAddress(prev => ({ ...prev, phone: e.target.value }))}
                     errorMessage={errors.phone}
@@ -219,7 +221,7 @@ export default function Payment() {
                 <div className='md:col-span-2'>
                   <Input
                     name='address'
-                    placeholder='Địa chỉ cụ thể *'
+                    placeholder={t('payment.address')}
                     value={deliveryAddress.address}
                     onChange={(e) => setDeliveryAddress(prev => ({ ...prev, address: e.target.value }))}
                     errorMessage={errors.address}
@@ -228,7 +230,7 @@ export default function Payment() {
                 <div>
                   <AddressSelect
                     name='city'
-                    placeholder='Chọn Tỉnh/Thành phố *'
+                    placeholder={t('payment.select_city')}
                     value={selectedProvince}
                     onChange={setSelectedProvince}
                     options={provinces}
@@ -239,7 +241,7 @@ export default function Payment() {
                 <div>
                   <AddressSelect
                     name='district'
-                    placeholder='Chọn Quận/Huyện *'
+                    placeholder={t('payment.select_district')}
                     value={selectedDistrict}
                     onChange={setSelectedDistrict}
                     options={districts}
@@ -250,7 +252,7 @@ export default function Payment() {
                 <div>
                   <AddressSelect
                     name='ward'
-                    placeholder='Chọn Phường/Xã *'
+                    placeholder={t('payment.select_ward')}
                     value={selectedWard}
                     onChange={setSelectedWard}
                     options={wards}
@@ -263,11 +265,11 @@ export default function Payment() {
 
             {/* Message */}
             <div className='bg-white rounded-lg shadow p-6 mb-6'>
-              <h2 className='text-3xl font-bold mb-6'>Ghi chú đơn hàng</h2>
+              <h2 className='text-3xl font-bold mb-6'>{t('payment.order_note')}</h2>
               <textarea
                 className='w-full p-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-xl'
                 rows={4}
-                placeholder='Ghi chú cho đơn hàng (tùy chọn)'
+                placeholder={t('payment.order_note_placeholder')}
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
               />
@@ -275,7 +277,7 @@ export default function Payment() {
 
             {/* Payment Methods */}
             <div className='bg-white rounded-lg shadow p-6'>
-              <h2 className='text-3xl font-bold mb-6'>Phương thức thanh toán</h2>
+              <h2 className='text-3xl font-bold mb-6'>{t('payment.payment_methods')}</h2>
               <div className='space-y-4'>
                 {paymentMethods.map((method) => (
                   <div
@@ -297,8 +299,8 @@ export default function Payment() {
                         className='mr-3 h-4 w-4 text-orange-600 focus:ring-orange-500'
                       />
                       <div>
-                        <h3 className='font-semibold text-2xl'>{method.name}</h3>
-                        <p className='text-gray-600 text-xl'>{method.description}</p>
+                        <h3 className='font-semibold text-2xl'>{t(method.name)}</h3>
+                        <p className='text-gray-600 text-xl'>{t(method.description)}</p>
                       </div>
                     </div>
                   </div>
@@ -310,7 +312,7 @@ export default function Payment() {
           {/* Order Summary */}
           <div className='lg:col-span-1'>
             <div className='bg-white rounded-lg shadow p-6 sticky top-4'>
-              <h2 className='text-3xl font-bold mb-6'>Đơn hàng của bạn</h2>
+              <h2 className='text-3xl font-bold mb-6'>{t('payment.order_summary')}</h2>
               <div className='space-y-4'>
                 {state.selectedItems.map((item) => (
                   <div key={item.id} className='flex items-center space-x-3'>
@@ -321,7 +323,7 @@ export default function Payment() {
                     />
                     <div className='flex-1'>
                       <h3 className='font-medium text-xl line-clamp-2'>{item.product_name}</h3>
-                      <p className='text-gray-600 text-lg'>Số lượng: {item.quantity}</p>
+                      <p className='text-gray-600 text-lg'>{t('payment.quantity', { count: item.quantity })}</p>
                       <p className='text-orange font-semibold'>
                         ₫{formatCurrency(item.price * item.quantity)}
                       </p>
@@ -331,7 +333,7 @@ export default function Payment() {
               </div>
               <div className='border-t pt-4 mt-4'>
                 <div className='flex justify-between items-center text-2xl font-bold'>
-                  <span>Tổng cộng:</span>
+                  <span>{t('payment.grand_total')}</span>
                   <span className='text-orange'>₫{formatCurrency(state.totalAmount)}</span>
                 </div>
               </div>
@@ -340,7 +342,7 @@ export default function Payment() {
                 onClick={handleSubmit}
                 disabled={createOrderMutation.isPending}
               >
-                {createOrderMutation.isPending ? 'Đang xử lý...' : 'Đặt hàng'}
+                {createOrderMutation.isPending ? t('payment.processing') : t('payment.place_order')}
               </Button>
             </div>
           </div>

@@ -912,6 +912,19 @@ router.get('/flash-sales', requireAdmin, async (req, res) => {
   }
 })
 
+// Delete a product from a flash sale
+router.delete('/flash-sales/:id/items/:productId', requireAdmin, async (req, res) => {
+  try {
+    const { id, productId } = req.params
+    const sale = await FlashSale.removeItem(Number(id), Number(productId))
+    if (!sale) return res.status(404).json({ message: 'Flash sale không tồn tại', data: null })
+    res.json({ message: 'Xóa sản phẩm khỏi flash sale thành công', data: sale })
+  } catch (error) {
+    console.error('Delete flash sale item error:', error)
+    res.status(500).json({ message: 'Lỗi server', data: null })
+  }
+})
+
 // Get flash sale detail with items
 router.get('/flash-sales/:id', requireAdmin, async (req, res) => {
   try {
