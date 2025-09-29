@@ -1,3 +1,15 @@
 {
-  "available": "Available products"
+  "available": "Available products",
+  "sold": "Sold",
+  "discount_short": "off",
+  "quantity": "Quantity",
+  "out_of_stock": "Out of stock",
+  "low_stock": "Only {{count}} left",
+  "add_to_cart": "Add to cart",
+  "adding": "Adding...",
+  "buy_now": "Buy now",
+  "processing": "Processing...",
+  "description": "Product description",
+  "you_may_also_like": "You may also like",
+  "flash_sale_active": "Flash Sale is live"
 }

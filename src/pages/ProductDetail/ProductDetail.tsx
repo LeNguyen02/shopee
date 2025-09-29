@@ -215,7 +215,7 @@ export default function ProductDetail() {
         {flashSale && flashSale.items.some(i => i.product_id === product.id) && (
           <div className='mb-4 bg-white rounded p-4 flex items-center gap-3'>
             <img src="/assets/img/flash-sale/flash-sale-icon.png" alt="Flash Sale" className="w-[10rem] h-10" />
-            <div className='text-red-600 font-semibold text-2xl'>Flash Sale đang diễn ra</div>
+            <div className='text-red-600 font-semibold text-2xl'>{t('product:flash_sale_active')}</div>
             <div className='ml-auto flex items-center gap-1 text-black font-mono text-2xl'>
               <span className='bg-black text-white px-2 py-1 rounded'>{remaining.h}</span>
               :
@@ -300,18 +300,18 @@ export default function ProductDetail() {
                 <div className='mx-4 h-5 md:h-6 w-[1px] bg-gray-300'></div>
                 <div>
                   <span className='text-xl md:text-3xl font-medium'>{formatNumberToSocialStyle(product.sold)}</span>
-                  <span className='ml-3 text-gray-500 text-lg md:text-2xl'>Đã bán</span>
+                  <span className='ml-3 text-gray-500 text-lg md:text-2xl'>{t('product:sold')}</span>
                 </div>
               </div>
               <div className='mt-4 md:mt-8 flex items-center flex-wrap gap-3 bg-gray-50 px-4 md:px-6 py-4 md:py-6'>
                 <div className='text-gray-500 line-through text-xl md:text-3xl'>₫{formatCurrency(product.price_before_discount)}</div>
                 <div className='md:ml-3 text-3xl md:text-5xl font-bold text-orange'>₫{formatCurrency(product.price)}</div>
                 <div className='md:ml-4 rounded-sm bg-orange px-2 py-1 text-sm md:text-xl font-semibold uppercase text-white'>
-                  {rateSale(product.price_before_discount, product.price)} giảm
+                  {rateSale(product.price_before_discount, product.price)} {t('product:discount_short')}
                 </div>
               </div>
               <div className='mt-4 md:mt-8 flex items-center flex-wrap gap-3'>
-                <div className='capitalize text-gray-500 text-base md:text-xl font-medium'>Số lượng</div>
+                <div className='capitalize text-gray-500 text-base md:text-xl font-medium'>{t('product:quantity')}</div>
                 <QuantityController
                   onDecrease={handleBuyCount}
                   onIncrease={handleBuyCount}
@@ -327,13 +327,13 @@ export default function ProductDetail() {
               {/* Stock Status Indicators */}
               {product.quantity === 0 && (
                 <div className='mt-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded text-xl'>
-                  <strong>Sản phẩm đã hết hàng</strong>
+                  <strong>{t('product:out_of_stock')}</strong>
                 </div>
               )}
               
               {product.quantity > 0 && product.quantity <= 5 && (
                 <div className='mt-4 bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded text-xl'>
-                  <strong>Chỉ còn {product.quantity} sản phẩm</strong> - Đặt hàng ngay!
+                  <strong>{t('product:low_stock', { count: product.quantity })}</strong> - Đặt hàng ngay!
                 </div>
               )}
               <div className='mt-8 md:mt-20 flex items-center'>
@@ -371,7 +371,7 @@ export default function ProductDetail() {
                       <line fill='none' strokeLinecap='round' strokeMiterlimit={10} x1={9} x2={9} y1='8.5' y2='5.5' />
                     </g>
                   </svg>
-                  {addToCartMutation.isPending ? 'Đang thêm...' : 'Thêm vào giỏ hàng'}
+                  {addToCartMutation.isPending ? t('product:adding') : t('product:add_to_cart')}
                 </button>
                 <button
                   onClick={buyNow}
@@ -382,7 +382,7 @@ export default function ProductDetail() {
                       : 'bg-orange text-white hover:bg-orange/90'
                   }`}
                 >
-                  {addToCartMutation.isPending ? 'Đang xử lý...' : 'Mua ngay'}
+                  {addToCartMutation.isPending ? t('product:processing') : t('product:buy_now')}
                 </button>
               </div>
             </div>
@@ -392,7 +392,7 @@ export default function ProductDetail() {
       <div className='mt-8'>
         <div className='container'>
           <div className=' bg-white p-4 shadow'>
-            <div className='rounded bg-gray-50 p-4 text-2xl capitalize text-slate-700 font-semibold'>Mô tả sản phẩm</div>
+            <div className='rounded bg-gray-50 p-4 text-2xl capitalize text-slate-700 font-semibold'>{t('product:description')}</div>
             <div className='mx-4 mt-12 mb-4 text-xl leading-relaxed'>
               <div
                 dangerouslySetInnerHTML={{
@@ -406,7 +406,7 @@ export default function ProductDetail() {
 
       <div className='mt-8'>
         <div className='container'>
-          <div className='uppercase text-gray-400 text-4xl font-bold'>CÓ THỂ BẠN CŨNG THÍCH</div>
+          <div className='uppercase text-gray-400 text-4xl font-bold'>{t('product:you_may_also_like').toUpperCase()}</div>
                         {productsData && (
             <div className='mt-6 grid grid-cols-2 gap-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 items-stretch'>
               {productsData.data.data.products.map((relatedProduct) => (

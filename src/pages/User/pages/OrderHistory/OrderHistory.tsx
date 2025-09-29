@@ -9,6 +9,7 @@ import { formatCurrency } from 'src/utils/utils'
 import { getImageUrl } from 'src/utils/imageUtils'
 import { Order } from 'src/types/payment.type'
 import path from 'src/constants/path'
+import { useTranslation } from 'react-i18next'
 
 // Confirmation Modal Component
 function ConfirmationModal({ 
@@ -265,6 +266,7 @@ function OrderDetailModal({
 }
 
 export default function OrderHistory() {
+  const { t } = useTranslation('user')
   const navigate = useNavigate()
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -283,11 +285,11 @@ export default function OrderHistory() {
   const cancelOrderMutation = useMutation({
     mutationFn: (orderId: string) => paymentApi.cancelOrder(orderId),
     onSuccess: () => {
-      toast.success('Hủy đơn hàng thành công')
+      toast.success(t('orders.confirm_cancel'))
       refetch()
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.message || 'Có lỗi xảy ra khi hủy đơn hàng')
+      toast.error(error.response?.data?.message || t('orders.load_error'))
     }
   })
 
@@ -323,7 +325,7 @@ export default function OrderHistory() {
       <div className="min-h-screen bg-gray-50 py-8">
         <div className="container max-w-6xl mx-auto px-4">
           <div className="text-center">
-            <div className="text-2xl text-gray-600">Đang tải...</div>
+            <div className="text-2xl text-gray-600">{t('orders.loading')}</div>
           </div>
         </div>
       </div>
@@ -335,7 +337,7 @@ export default function OrderHistory() {
       <div className="min-h-screen bg-gray-50 py-8">
         <div className="container max-w-6xl mx-auto px-4">
           <div className="text-center">
-            <div className="text-2xl text-red-600">Có lỗi xảy ra khi tải đơn hàng</div>
+            <div className="text-2xl text-red-600">{t('orders.load_error')}</div>
           </div>
         </div>
       </div>
@@ -347,21 +349,21 @@ export default function OrderHistory() {
       <div className="container max-w-6xl mx-auto px-4">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">Lịch sử đơn hàng</h1>
-          <p className="text-lg text-gray-600">Quản lý và theo dõi các đơn hàng của bạn</p>
+          <h1 className="text-4xl font-bold text-gray-900 mb-2">{t('orders.title')}</h1>
+          <p className="text-lg text-gray-600">{t('orders.manage_track')}</p>
         </div>
 
         {/* Orders List */}
         {orders.length === 0 ? (
           <div className="text-center py-12">
             <div className="text-6xl mb-4">📦</div>
-            <h2 className="text-2xl font-semibold text-gray-900 mb-2">Chưa có đơn hàng nào</h2>
-            <p className="text-lg text-gray-600 mb-6">Bạn chưa có đơn hàng nào. Hãy bắt đầu mua sắm!</p>
+            <h2 className="text-2xl font-semibold text-gray-900 mb-2">{t('orders.no_orders')}</h2>
+            <p className="text-lg text-gray-600 mb-6">{t('orders.manage_track')}</p>
             <Button
               className="px-8 py-3 bg-orange text-white rounded-lg hover:bg-orange/90"
               onClick={() => navigate(path.home)}
             >
-              Mua sắm ngay
+              {t('orders.shop_now')}
             </Button>
           </div>
         ) : (
@@ -373,9 +375,9 @@ export default function OrderHistory() {
                   {/* Order Header */}
                   <div className="flex justify-between items-start mb-4">
                     <div>
-                      <h3 className="text-2xl font-semibold text-gray-900">Đơn hàng #{order.id}</h3>
+                      <h3 className="text-2xl font-semibold text-gray-900">{t('orders.order', { id: order.id })}</h3>
                       <p className="text-lg text-gray-600">
-                        Ngày đặt: {new Date(order.created_at).toLocaleDateString('vi-VN')}
+                        {t('orders.order_date', { date: new Date(order.created_at).toLocaleDateString('vi-VN') })}
                       </p>
                     </div>
                     <div className="text-right">
@@ -383,7 +385,7 @@ export default function OrderHistory() {
                         ₫{formatCurrency(order.total_amount)}
                       </div>
                       <p className="text-lg text-gray-600">
-                        {order.items.length} sản phẩm
+                        {t('orders.items_count', { count: order.items.length })}
                       </p>
                     </div>
                   </div>
@@ -425,7 +427,7 @@ export default function OrderHistory() {
                         className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
                         onClick={() => handleViewOrder(order)}
                       >
-                        Xem chi tiết
+                        {t('orders.view_detail')}
                       </Button>
                       {order.order_status === 'pending' && (
                         <Button
@@ -433,7 +435,7 @@ export default function OrderHistory() {
                           onClick={() => handleCancelOrderClick(order.id)}
                           disabled={cancelOrderMutation.isPending}
                         >
-                          {cancelOrderMutation.isPending ? 'Đang hủy...' : 'Hủy đơn'}
+                          {cancelOrderMutation.isPending ? t('orders.cancelling') : t('orders.cancel_order')}
                         </Button>
                       )}
                     </div>
@@ -460,10 +462,10 @@ export default function OrderHistory() {
             setOrderToCancel(null)
           }}
           onConfirm={handleCancelOrderConfirm}
-          title="Xác nhận hủy đơn hàng"
-          message="Bạn có chắc chắn muốn hủy đơn hàng này? Hành động này không thể hoàn tác."
-          confirmText="Hủy đơn hàng"
-          cancelText="Không hủy"
+          title={t('orders.confirm_cancel_title')}
+          message={t('orders.confirm_cancel_message')}
+          confirmText={t('orders.confirm_cancel')}
+          cancelText={t('orders.not_cancel')}
           isLoading={cancelOrderMutation.isPending}
         />
       </div>

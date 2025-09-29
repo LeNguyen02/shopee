@@ -14,8 +14,10 @@ import { setProfileToLS } from 'src/utils/auth'
 import { userSchema, UserSchema } from 'src/utils/rules'
 import { getAvatarUrl, isAxiosUnprocessableEntityError } from 'src/utils/utils'
 import DateSelect from '../../components/DateSelect'
+import { useTranslation } from 'react-i18next'
 
 function Info() {
+  const { t } = useTranslation('user')
   const {
     register,
     control,
@@ -24,19 +26,19 @@ function Info() {
   return (
     <Fragment>
       <div className='mt-6 flex flex-col flex-wrap sm:flex-row'>
-        <div className='truncate pt-3 capitalize sm:w-[20%] sm:text-right'>Tên</div>
+        <div className='truncate pt-3 capitalize sm:w-[20%] sm:text-right'>{t('profile.full_name')}</div>
         <div className='sm:w-[80%] sm:pl-5'>
           <Input
             classNameInput='w-full rounded-sm border border-gray-300 px-3 py-2 outline-none focus:border-gray-500 focus:shadow-sm'
             register={register}
             name='name'
-            placeholder='Tên'
+            placeholder={t('profile.full_name')}
             errorMessage={errors.name?.message}
           />
         </div>
       </div>
       <div className='mt-2 flex flex-col flex-wrap sm:flex-row'>
-        <div className='truncate pt-3 capitalize sm:w-[20%] sm:text-right'>Số điện thoại</div>
+        <div className='truncate pt-3 capitalize sm:w-[20%] sm:text-right'>{t('profile.phone')}</div>
         <div className='sm:w-[80%] sm:pl-5'>
           <Controller
             control={control}
@@ -44,7 +46,7 @@ function Info() {
             render={({ field }) => (
               <InputNumber
                 classNameInput='w-full rounded-sm border border-gray-300 px-3 py-2 outline-none focus:border-gray-500 focus:shadow-sm'
-                placeholder='Số điện thoại'
+                placeholder={t('profile.phone')}
                 errorMessage={errors.phone?.message}
                 {...field}
                 onChange={field.onChange}
@@ -72,6 +74,7 @@ const profileSchema = userSchema.pick(['name', 'address', 'phone', 'date_of_birt
 // Nhấn submit thì tiến hành upload lên server, nếu upload thành công thì tiến hành gọi api updateProfile
 
 export default function Profile() {
+  const { t } = useTranslation('user')
   const { setProfile } = useContext(AppContext)
   const [file, setFile] = useState<File>()
 
@@ -163,8 +166,8 @@ export default function Profile() {
   return (
     <div className='rounded-sm bg-white px-2 pb-10 shadow md:px-7 md:pb-20'>
       <div className='border-b border-b-gray-200 py-6'>
-        <h1 className='text-3xl font-medium capitalize text-gray-900'>Hồ Sơ Của Tôi</h1>
-        <div className='mt-1 text-sm text-gray-700'>Quản lý thông tin hồ sơ để bảo mật tài khoản</div>
+        <h1 className='text-3xl font-medium capitalize text-gray-900'>{t('profile.title')}</h1>
+        <div className='mt-1 text-sm text-gray-700'>{t('orders.manage_track')}</div>
       </div>
       <FormProvider {...methods}>
         <form className='mt-8 flex flex-col-reverse md:flex-row md:items-start' onSubmit={onSubmit}>
@@ -177,13 +180,13 @@ export default function Profile() {
             </div>
             <Info />
             <div className='mt-2 flex flex-col flex-wrap sm:flex-row'>
-              <div className='truncate pt-3 capitalize sm:w-[20%] sm:text-right'>Địa chỉ</div>
+              <div className='truncate pt-3 capitalize sm:w-[20%] sm:text-right'>{t('profile.address')}</div>
               <div className='sm:w-[80%] sm:pl-5'>
                 <Input
                   classNameInput='w-full rounded-sm border border-gray-300 px-3 py-2 outline-none focus:border-gray-500 focus:shadow-sm'
                   register={register}
                   name='address'
-                  placeholder='Địa chỉ'
+                  placeholder={t('profile.address')}
                   errorMessage={errors.address?.message}
                 />
               </div>
@@ -206,7 +209,7 @@ export default function Profile() {
                   className='flex h-9 items-center rounded-sm bg-orange px-5 text-center text-sm text-white hover:bg-orange/80'
                   type='submit'
                 >
-                  Lưu
+                  {t('profile.save_changes')}
                 </Button>
               </div>
             </div>
@@ -222,8 +225,8 @@ export default function Profile() {
               </div>
               <InputFile onChange={handleChangeFile} />
               <div className='mt-3 text-gray-400'>
-                <div>Dụng lượng file tối đa 1 MB</div>
-                <div>Định dạng:.JPEG, .PNG</div>
+                <div>Max file size 1 MB</div>
+                <div>Formats: .JPEG, .PNG</div>
               </div>
             </div>
           </div>

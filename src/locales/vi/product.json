@@ -1,3 +1,15 @@
 {
-  "available": "Sản phẩm có sẵn"
+  "available": "Sản phẩm có sẵn",
+  "sold": "Đã bán",
+  "discount_short": "giảm",
+  "quantity": "Số lượng",
+  "out_of_stock": "Sản phẩm đã hết hàng",
+  "low_stock": "Chỉ còn {{count}} sản phẩm",
+  "add_to_cart": "Thêm vào giỏ hàng",
+  "adding": "Đang thêm...",
+  "buy_now": "Mua ngay",
+  "processing": "Đang xử lý...",
+  "description": "Mô tả sản phẩm",
+  "you_may_also_like": "Có thể bạn cũng thích",
+  "flash_sale_active": "Flash Sale đang diễn ra"
 }

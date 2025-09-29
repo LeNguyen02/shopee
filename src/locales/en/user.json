@@ -14,11 +14,11 @@
     "address": "Address",
     "avatar": "Avatar",
     "change_avatar": "Change Avatar",
-    "save_changes": "Save Changes",
+    "save_changes": "Save",
     "cancel_changes": "Cancel Changes"
   },
   "orders": {
-    "title": "My Orders",
+    "title": "Order History",
     "order_history": "Order History",
     "order_id": "Order ID",
     "order_date": "Order Date",
@@ -35,7 +35,23 @@
     "delivered": "Delivered",
     "cancelled": "Cancelled",
     "returned": "Returned",
-    "refunded": "Refunded"
+    "refunded": "Refunded",
+    "no_orders": "No orders yet",
+    "manage_track": "Manage and track your orders",
+    "shop_now": "Shop now",
+    "order": "Order #{{id}}",
+    "order_date": "Order date: {{date}}",
+    "items_count": "{{count}} items",
+    "view_detail": "View details",
+    "cancel_order": "Cancel order",
+    "cancelling": "Cancelling...",
+    "loading": "Loading...",
+    "load_error": "An error occurred while loading orders",
+    "close": "Close",
+    "confirm_cancel_title": "Confirm cancel order",
+    "confirm_cancel_message": "Are you sure you want to cancel this order? This action cannot be undone.",
+    "confirm_cancel": "Cancel order",
+    "not_cancel": "Do not cancel"
   },
   "account": {
     "title": "My Account",
