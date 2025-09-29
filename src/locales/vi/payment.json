@@ -86,7 +86,8 @@
     "not_found": "Không tìm thấy thông tin đơn hàng",
     "go_home": "Về trang chủ",
     "cod": "Thanh toán khi nhận hàng (COD)",
-    "stripe": "Thanh toán bằng thẻ (Stripe)"
+    "stripe": "Thanh toán bằng thẻ (Stripe)",
+    "momo": "Chuyển khoản MoMo"
   },
   "stripe": {
     "title": "Thanh toán Stripe",
