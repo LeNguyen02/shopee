@@ -22,8 +22,8 @@ interface PaymentPageState {
 const paymentMethods: PaymentMethod[] = [
   {
     type: 'cod',
-    name: 'payment:payment.cod_name',
-    description: 'payment:payment.cod_desc'
+    name: 'payment.cod_name',
+    description: 'payment.cod_desc'
   },
   // {
   //   type: 'stripe',
@@ -32,8 +32,8 @@ const paymentMethods: PaymentMethod[] = [
   // },
   {
     type: 'momo',
-    name: 'payment:payment.momo_name',
-    description: 'payment:payment.momo_desc'
+    name: 'payment.momo_name',
+    description: 'payment.momo_desc'
   }
 ]
 
@@ -299,8 +299,8 @@ export default function Payment() {
                         className='mr-3 h-4 w-4 text-orange-600 focus:ring-orange-500'
                       />
                       <div>
-                        <h3 className='font-semibold text-2xl'>{t(method.name)}</h3>
-                        <p className='text-gray-600 text-xl'>{t(method.description)}</p>
+                        <h3 className='font-semibold text-2xl'>{t(method.name as any)}</h3>
+                        <p className='text-gray-600 text-xl'>{t(method.description as any)}</p>
                       </div>
                     </div>
                   </div>

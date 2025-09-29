@@ -86,7 +86,8 @@
     "not_found": "Order information not found",
     "go_home": "Go home",
     "cod": "Cash on Delivery (COD)",
-    "stripe": "Stripe Card Payment"
+    "stripe": "Stripe Card Payment",
+    "momo": "MoMo Transfer"
   },
   "stripe": {
     "title": "Stripe Payment",
