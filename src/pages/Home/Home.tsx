@@ -161,6 +161,15 @@ function Home() {
     const { t } = useTranslation('home')
     const baseQueryConfig = useQueryConfig()
 
+    // Debug current app time contexts
+    useEffect(() => {
+        const now = new Date()
+        const nowUtcIso = new Date().toISOString()
+        const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone
+        const vnTime = new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })
+        console.log('[App Time]', { nowLocal: now.toString(), nowUtcIso, timezone, vnTime })
+    }, [])
+
     // Set limit to 12 for 2 rows (6 products per row × 2 rows = 12 products)
     // Remove search parameters to only show today's suggestions
     const queryConfig = {
