@@ -8,32 +8,15 @@ import { toast } from 'react-toastify'
 // Helper: convert 'YYYY-MM-DDTHH:mm' (local) -> 'YYYY-MM-DD HH:mm:00'
 function toMySqlDateTime(localDatetimeValue: string) {
   if (!localDatetimeValue) return ''
+  // Ensure seconds component exists and replace the 'T' separator
   const withSeconds = localDatetimeValue.length === 16 ? `${localDatetimeValue}:00` : localDatetimeValue
   return withSeconds.replace('T', ' ')
 }
 
-// Interpret MySQL DATETIME (stored as UTC) as UTC Date
-function parseMysqlAsUtc(mysqlDatetimeValue: string) {
-  // Expect format 'YYYY-MM-DD HH:mm:ss'
-  const isoLike = mysqlDatetimeValue.replace(' ', 'T') + 'Z'
-  const d = new Date(isoLike)
-  return d
-}
-
-function pad2(n: number) {
-  return String(n).padStart(2, '0')
-}
-
-// Convert DB UTC time -> local input value 'YYYY-MM-DDTHH:mm' (display as UTC+7 to admins)
+// Helper: convert DB 'YYYY-MM-DD HH:mm:ss' -> 'YYYY-MM-DDTHH:mm' for <input type="datetime-local">
 function toInputDateTime(mysqlDatetimeValue: string) {
   if (!mysqlDatetimeValue) return ''
-  const adjusted = new Date(parseMysqlAsUtc(mysqlDatetimeValue).getTime() + 7 * 60 * 60 * 1000)
-  const y = adjusted.getFullYear()
-  const M = pad2(adjusted.getMonth() + 1)
-  const d = pad2(adjusted.getDate())
-  const h = pad2(adjusted.getHours())
-  const m = pad2(adjusted.getMinutes())
-  return `${y}-${M}-${d}T${h}:${m}`
+  return mysqlDatetimeValue.replace(' ', 'T').slice(0, 16)
 }
 
 export default function FlashSaleManagement() {
@@ -133,12 +116,7 @@ export default function FlashSaleManagement() {
     onError: (e: any) => toast.error(e?.response?.data?.message || 'Lỗi cập nhật sản phẩm')
   })
 
-  // Display helper: DB time (UTC) -> local string shown to admin (UTC+7)
-  const formatDate = (mysql: string) => {
-    if (!mysql) return ''
-    const adjusted = new Date(parseMysqlAsUtc(mysql).getTime() + 7 * 60 * 60 * 1000)
-    return adjusted.toLocaleString()
-  }
+  const formatDate = (iso: string) => new Date(iso).toLocaleString()
 
   const handleOpenEdit = (sale: FlashSale) => {
     setEditing(sale)
@@ -202,9 +180,8 @@ export default function FlashSaleManagement() {
             <tbody className="bg-white divide-y divide-gray-200">
               {list.map(sale => {
                 const now = Date.now()
-                // Adjust DB UTC times to UTC+7 for comparison in admin UI
-                const st = new Date(parseMysqlAsUtc(sale.start_time).getTime() + 7 * 60 * 60 * 1000).getTime()
-                const en = new Date(parseMysqlAsUtc(sale.end_time).getTime() + 7 * 60 * 60 * 1000).getTime()
+                const st = new Date(sale.start_time).getTime()
+                const en = new Date(sale.end_time).getTime()
                 const state = now < st ? 'Sắp diễn ra' : now > en ? 'Đã kết thúc' : 'Đang diễn ra'
                 return (
                   <tr key={sale.id} className="hover:bg-gray-50">
