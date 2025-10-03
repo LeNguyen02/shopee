@@ -552,7 +552,7 @@ function Home() {
                                         <Link to={`${path.productDetail}/${item.product_id}`} className="flash-sale__item-link">
                                             <div
                                                 className="home-product__item-img"
-                                                style={{ backgroundImage: `url(${item.product_image || '/assets/img/no-product.png'})` }}
+                                                style={{ backgroundImage: `url(${getImageUrl(item.product_image || '') || '/assets/img/no-product.png'})` }}
                                             ></div>
                                             <p className="home-product__item-content">{item.product_name}</p>
                                             <div className="home-product__price-wrapper">
