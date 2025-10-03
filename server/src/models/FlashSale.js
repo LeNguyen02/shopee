@@ -90,8 +90,14 @@ class FlashSale {
   }
 
   static async getActiveNow() {
+    // Compare using UTC+7 explicitly to avoid dependence on DB server timezone
     const [rows] = await pool.execute(
-      `SELECT * FROM flash_sales WHERE is_active = 1 AND start_time <= NOW() AND end_time > NOW() ORDER BY start_time DESC LIMIT 1`
+      `SELECT * FROM flash_sales
+       WHERE is_active = 1
+         AND DATE_ADD(start_time, INTERVAL 7 HOUR) <= DATE_ADD(UTC_TIMESTAMP(), INTERVAL 7 HOUR)
+         AND DATE_ADD(end_time, INTERVAL 7 HOUR) > DATE_ADD(UTC_TIMESTAMP(), INTERVAL 7 HOUR)
+       ORDER BY start_time DESC
+       LIMIT 1`
     )
     if (!rows.length) return null
     return this.findByIdWithItems(rows[0].id)
@@ -110,11 +116,12 @@ class FlashSale {
       params.push(`%${search}%`)
     }
     if (status === 'active') {
-      where.push('is_active = 1 AND start_time <= NOW() AND end_time > NOW()')
+      // Use UTC+7 window for active state
+      where.push('is_active = 1 AND DATE_ADD(start_time, INTERVAL 7 HOUR) <= DATE_ADD(UTC_TIMESTAMP(), INTERVAL 7 HOUR) AND DATE_ADD(end_time, INTERVAL 7 HOUR) > DATE_ADD(UTC_TIMESTAMP(), INTERVAL 7 HOUR)')
     } else if (status === 'upcoming') {
-      where.push('start_time > NOW()')
+      where.push('DATE_ADD(start_time, INTERVAL 7 HOUR) > DATE_ADD(UTC_TIMESTAMP(), INTERVAL 7 HOUR)')
     } else if (status === 'ended') {
-      where.push('end_time <= NOW()')
+      where.push('DATE_ADD(end_time, INTERVAL 7 HOUR) <= DATE_ADD(UTC_TIMESTAMP(), INTERVAL 7 HOUR)')
     }
     const whereSql = where.length ? `WHERE ${where.join(' AND ')}` : ''
     // Some MySQL setups are picky about binding LIMIT/OFFSET in prepared statements.
@@ -135,11 +142,11 @@ class FlashSale {
       params.push(`%${search}%`)
     }
     if (status === 'active') {
-      where.push('is_active = 1 AND start_time <= NOW() AND end_time > NOW()')
+      where.push('is_active = 1 AND DATE_ADD(start_time, INTERVAL 7 HOUR) <= DATE_ADD(UTC_TIMESTAMP(), INTERVAL 7 HOUR) AND DATE_ADD(end_time, INTERVAL 7 HOUR) > DATE_ADD(UTC_TIMESTAMP(), INTERVAL 7 HOUR)')
     } else if (status === 'upcoming') {
-      where.push('start_time > NOW()')
+      where.push('DATE_ADD(start_time, INTERVAL 7 HOUR) > DATE_ADD(UTC_TIMESTAMP(), INTERVAL 7 HOUR)')
     } else if (status === 'ended') {
-      where.push('end_time <= NOW()')
+      where.push('DATE_ADD(end_time, INTERVAL 7 HOUR) <= DATE_ADD(UTC_TIMESTAMP(), INTERVAL 7 HOUR)')
     }
     const whereSql = where.length ? `WHERE ${where.join(' AND ')}` : ''
     const [rows] = await pool.execute(`SELECT COUNT(*) as total FROM flash_sales ${whereSql}`, params)
