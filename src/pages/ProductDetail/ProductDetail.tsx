@@ -109,7 +109,7 @@ export default function ProductDetail() {
     if (!flashSale) return
     const item = flashSale.items.find(i => i.product_id === product?.id)
     if (!item) return
-    const end = new Date(flashSale.end_time).getTime()
+    const end = new Date(new Date(flashSale.end_time).getTime() - 7 * 60 * 60 * 1000).getTime()
     const interval = setInterval(() => {
       const now = Date.now()
       const diff = Math.max(0, end - now)
