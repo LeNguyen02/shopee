@@ -1,10 +1,23 @@
 const { pool } = require('../config/database')
 
+function subtract7HoursToMysqlDatetime(input) {
+  if (!input) return input
+  const date = new Date(input)
+  if (isNaN(date.getTime())) return input
+  const adjusted = new Date(date.getTime() - 7 * 60 * 60 * 1000)
+  return adjusted.toISOString().slice(0, 19).replace('T', ' ')
+}
+
 class FlashSale {
   static async create({ name, start_time, end_time, is_active = 1 }) {
     const [result] = await pool.execute(
       `INSERT INTO flash_sales (name, start_time, end_time, is_active) VALUES (?, ?, ?, ?)` ,
-      [name, start_time, end_time, is_active]
+      [
+        name,
+        subtract7HoursToMysqlDatetime(start_time),
+        subtract7HoursToMysqlDatetime(end_time),
+        is_active
+      ]
     )
     return this.findById(result.insertId)
   }
@@ -13,8 +26,13 @@ class FlashSale {
     const fields = []
     const params = []
     for (const [key, value] of Object.entries(data)) {
-      fields.push(`${key} = ?`)
-      params.push(value)
+      if (key === 'start_time' || key === 'end_time') {
+        fields.push(`${key} = ?`)
+        params.push(subtract7HoursToMysqlDatetime(value))
+      } else {
+        fields.push(`${key} = ?`)
+        params.push(value)
+      }
     }
     if (fields.length === 0) return this.findById(id)
     params.push(id)
