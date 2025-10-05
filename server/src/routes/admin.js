@@ -575,9 +575,10 @@ router.get('/orders', requireAdmin, async (req, res) => {
       params.push(payment_status);
     }
 
-    if (user_payment_confirmed !== undefined) {
+    // Only apply this filter when explicitly '0' or '1' to avoid empty-string filtering
+    if (user_payment_confirmed === '0' || user_payment_confirmed === '1') {
       whereClause += ' AND o.user_payment_confirmed = ?';
-      params.push(user_payment_confirmed);
+      params.push(Number(user_payment_confirmed));
     }
     
     if (search) {
