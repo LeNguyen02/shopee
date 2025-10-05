@@ -17,14 +17,14 @@
     "amount": "Số tiền",
     "actions": "Thao tác",
     "delete": "Xóa",
-    "select_all": "Chọn tất cả ({count})",
+    "select_all": "Chọn tất cả",
     "save": "Tiết kiệm",
     "saving": "Đang lưu",
     "buy": "Mua hàng",
     "checkout_selected": "Thanh toán các mục đã chọn",
     "your_cart_is_empty": "Giỏ hàng của bạn còn trống",
     "buy_now": "Mua ngay",
-    "total_payment": "Tổng thanh toán ({count} sản phẩm):",
+    "total_payment": "Tổng thanh toán sản phẩm:",
     "you_save": "Tiết kiệm"
   },
   "payment": {

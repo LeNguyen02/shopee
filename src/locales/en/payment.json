@@ -17,14 +17,14 @@
     "amount": "Amount",
     "actions": "Actions",
     "delete": "Delete",
-    "select_all": "Select all ({count})",
+    "select_all": "Select all",
     "save": "Save",
     "saving": "Saving",
     "buy": "Buy",
     "checkout_selected": "Checkout selected",
     "your_cart_is_empty": "Your cart is empty",
     "buy_now": "Buy now",
-    "total_payment": "Total payment ({count} items):",
+    "total_payment": "Total payment:",
     "you_save": "You save"
   },
   "payment": {
