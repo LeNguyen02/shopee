@@ -91,16 +91,16 @@ class FlashSale {
 
   static async getActiveNow() {
     // Compare using UTC+7 explicitly to avoid dependence on DB server timezone
-    await pool.execute(`SET time_zone = '+07:00'`);
     const [rows] = await pool.execute(
-      `SELECT * FROM flash_sales
-       WHERE is_active = 1
-         AND start_time <= NOW()
-         AND end_time > NOW()
-       ORDER BY start_time DESC
-       LIMIT 1`
+      `SELECT *
+      FROM flash_sales
+      WHERE is_active = 1
+        AND CONVERT_TZ(start_time, '+00:00', '+07:00') <= NOW()
+        AND CONVERT_TZ(end_time, '+00:00', '+07:00') > NOW()
+      ORDER BY start_time DESC
+      LIMIT 1;`
     )
-    if (!rows.length) return null
+    if (!rows.length) return []
     return this.findByIdWithItems(rows[0].id)
   }
 
