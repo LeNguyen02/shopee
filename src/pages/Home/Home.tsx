@@ -201,7 +201,7 @@ function Home() {
     const [remaining, setRemaining] = useState<{ h: string; m: string; s: string }>({ h: '00', m: '00', s: '00' })
     useEffect(() => {
         if (!flashSale) return
-        const end = new Date(new Date(flashSale.end_time).getTime()).getTime()
+        const end = new Date(flashSale.end_time).getTime()
         const tick = () => {
             const now = Date.now()
             const diff = Math.max(0, end - now)
