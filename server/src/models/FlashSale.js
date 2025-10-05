@@ -100,7 +100,7 @@ class FlashSale {
       ORDER BY start_time DESC
       LIMIT 1;`
     )
-    if (!rows.length) return []
+    if (!rows.length) return null
     return this.findByIdWithItems(rows[0].id)
   }
 
