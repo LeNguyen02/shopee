@@ -262,7 +262,7 @@ export default function Cart() {
                   />
                 </div>
                 <button className='mx-3 border-none bg-none' onClick={handleCheckAll}>
-                  {t('cart.select_all', { count: cartItems.length })}
+                  {t('cart.select_all')}
                 </button>
                 <button className='mx-3 border-none bg-none' onClick={handleDeleteManyItems}>
                   {t('cart.delete')}

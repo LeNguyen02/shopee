@@ -233,41 +233,38 @@ function Home() {
 
     // Auto advance banners
     useEffect(() => {
+        if (bannerImages.length === 0) return
+    
         const startAutoSlide = () => {
             stopAutoSlide()
             autoSlideTimerRef.current = window.setInterval(() => {
                 setCurrentBannerIndex((prev) => (prev + 1) % bannerImages.length)
             }, 4000)
         }
-
+    
         const stopAutoSlide = () => {
             if (autoSlideTimerRef.current !== null) {
                 window.clearInterval(autoSlideTimerRef.current)
                 autoSlideTimerRef.current = null
             }
         }
-
+    
         startAutoSlide()
-
-        // Pause on hover (desktop)
+    
         const node = sliderRef.current
         if (node) {
-            const onMouseEnter = () => stopAutoSlide()
-            const onMouseLeave = () => startAutoSlide()
-            node.addEventListener('mouseenter', onMouseEnter)
-            node.addEventListener('mouseleave', onMouseLeave)
-            return () => {
-                stopAutoSlide()
-                node.removeEventListener('mouseenter', onMouseEnter)
-                node.removeEventListener('mouseleave', onMouseLeave)
-            }
+            node.addEventListener('mouseenter', stopAutoSlide)
+            node.addEventListener('mouseleave', startAutoSlide)
         }
-
+    
         return () => {
             stopAutoSlide()
+            if (node) {
+                node.removeEventListener('mouseenter', stopAutoSlide)
+                node.removeEventListener('mouseleave', startAutoSlide)
+            }
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [])
+    }, [bannerImages.length])
 
     // Touch handlers for swipe
     const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
