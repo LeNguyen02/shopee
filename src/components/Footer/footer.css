@@ -1,0 +1,242 @@
+.footer {
+    font-family: 'Roboto', sans-serif;
+    color: #555;
+    background-color: #fff;
+    max-width: 1200px;
+    margin: 40px auto 0;
+    padding: 0 16px;
+}
+
+/* ---------- TOP FIVE COLUMNS ---------- */
+.footer-columns {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    padding: 24px 0;
+    border-bottom: 1px solid #e5e5e5;
+}
+
+.footer-column {
+    flex: 1 1 180px;
+    margin-bottom: 16px;
+    padding: 0 12px;
+}
+
+.footer-column h4 {
+    font-size: 14px;
+    font-weight: 500;
+    color: #222;
+    margin-bottom: 12px;
+}
+
+.footer-column ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.footer-column li {
+    margin-bottom: 6px;
+}
+
+.footer-column a {
+    text-decoration: none;
+    color: #555;
+    font-size: 12px;
+}
+
+.footer-column a:hover {
+    text-decoration: underline;
+}
+
+/* ==== LƯỚI LOGO: đồng đều & đúng khoảng cách ==== */
+.payment-methods,
+.shipping-partners {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(56px, 1fr));
+    gap: 8px;
+}
+
+/* mỗi ảnh là 1 ô (tile) có nền xám nhạt, bo góc */
+.payment-methods img,
+.shipping-partners img {
+    display: block;
+    width: 100%;
+    max-width: 72px;
+    object-fit: contain;
+    background: #f5f5f5;
+    border: 1px solid #eee;
+    border-radius: 2px;
+    padding: 3px;
+    box-sizing: border-box;
+    margin: 0;
+}
+
+/* App download: QR + badge đều nhau, không bị lệch khoảng */
+.app-download {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    align-items: flex-start;
+}
+
+.app-download img {
+    display: block;
+    width: 70px;
+    object-fit: contain;
+}
+
+.app-download img[alt="QR Code"] {
+    width: 56px;
+    /* QR nhỏ hơn như ảnh mẫu */
+}
+
+/* Logo chứng nhận ở dải xám phía dưới */
+.bottom-logos {
+    margin: 12px 0 8px;
+}
+
+.bottom-logos img {
+    display: inline-block;
+    height: 40px;
+    /* cố định chiều cao */
+    width: auto;
+    margin: 0 12px;
+    /* khoảng cách hai logo */
+    vertical-align: middle;
+}
+
+/* Viền phân tách và khoảng cách tổng thể giống ảnh */
+.footer-columns {
+    padding: 24px 0 20px;
+    border-bottom: 1px solid #e5e5e5;
+}
+
+.copyright {
+    margin-top: 14px;
+}
+
+.country-region {
+    margin-top: 6px;
+}
+
+.footer-bottom {
+    background: #fafafa;
+    text-align: center;
+    margin-top: 16px;
+    padding: 18px 12px 26px;
+}
+
+.bottom-links {
+    display: flex;
+    justify-content: center;
+    gap: 18px;
+    margin: 14px 0 10px;
+}
+
+/* Responsive: logo grid auto-fit on small screens */
+@media (max-width: 900px) {
+    .payment-methods,
+    .shipping-partners {
+        grid-template-columns: repeat(auto-fit, minmax(52px, 1fr));
+    }
+}
+
+.social-media a {
+    display: block;
+    font-size: 12px;
+    margin-bottom: 6px;
+}
+
+.social-media i {
+    margin-right: 6px;
+}
+
+.app-download img {
+    display: block;
+    height: 30px;
+    margin-bottom: 6px;
+}
+
+/* ---------- META ROWS ABOVE GREY ---------- */
+.copyright,
+.country-region {
+    text-align: center;
+    font-size: 12px;
+    margin-top: 12px;
+}
+
+/* ---------- GREY LOWER STRIP ---------- */
+.footer-bottom {
+    background: #fafafa;
+    text-align: center;
+    margin-top: 16px;
+    padding: 16px 12px 24px;
+}
+
+.bottom-links {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 16px;
+    margin: 12px 0;
+}
+
+.bottom-links a {
+    font-size: 12px;
+    text-decoration: none;
+    color: #555;
+}
+
+.bottom-links a:hover {
+    text-decoration: underline;
+}
+
+.bottom-logos {
+    margin: 12px 0;
+}
+
+.bottom-logos img {
+    height: 40px;
+    margin: 0 6px;
+}
+
+.company-info {
+    font-size: 10px;
+    line-height: 1.5;
+    color: #777;
+}
+
+/* ---------- RESPONSIVE ---------- */
+@media (max-width: 768px) {
+    .footer-columns {
+        flex-direction: column;
+    }
+
+    .footer-column {
+        flex: 1 1 100%;
+    }
+}
+
+/* ---------- MOBILE: shorten footer ---------- */
+@media (max-width: 739px) {
+    .footer { margin: 20px auto 0; padding: 0 12px; }
+    .footer-columns { padding: 12px 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 12px; }
+    .footer-column { padding: 0; margin-bottom: 0; }
+
+    /* Hide long/secondary sections to shorten */
+    .country-region,
+    .bottom-logos,
+    .company-info { display: none; }
+
+    /* Collapse complex logo grids */
+    .payment-methods,
+    .shipping-partners { display: none; }
+
+    /* Reduce link density */
+    .footer-column h4 { font-size: 13px; margin-bottom: 8px; }
+    .footer-column a { font-size: 12px; }
+
+    .footer-bottom { padding: 12px; margin-top: 12px; }
+    .bottom-links { gap: 10px; margin: 8px 0; }
+}
